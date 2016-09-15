@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="HandheldFriendly" content="true" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<title>El Partido Codificado del Domingo &mdash; Superheroes</title>
+	<link rel="icon" href="assets/img/content/icon.png">
+	<!-- ========== CSS INCLUDES ========== -->	<link rel="stylesheet" href="assets/css/master.css">    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82832721-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<script>
+/**
+* Función de Analytics que realiza un seguimiento de un clic en un enlace externo.
+* Esta función toma una cadena de URL válida como argumento y la utiliza
+* como la etiqueta del evento. Configurar el método de transporte como "beacon" permite que el hit se envíe
+* con "navigator.sendBeacon" en el navegador que lo admita.
+*/
+var trackOutboundLink = function(url) {
+   ga('send', 'event', 'outbound', 'click', url, {
+     'transport': 'beacon',
+     'hitCallback': function(){document.location = url;}
+   });
+}
+</script>    
+    
+    
+</head>
+<body>
+	<div class="page-loader">
+	     <div class="vertical-align align-center">
+	          <img src="assets/loader/loader.gif" alt="" class="loader-img">
+	     </div>
+    </div>
+    <!-- =============== INICIO PLAYER ================ -->
+	<div class="main-music-player hide-player">
+		<a class="hide-player-button">
+			<i class="fa fa-plus"></i>
+			<i class="fa fa-minus"></i>
+		</a>
+		<div id="mesh-main-player" class="jp-jplayer" data-audio-src="assets/audio/flute.mp3" data-title="See right through ft. Fiora" data-artist="Superheroes"></div>
+		
+		<div id="mesh-main-player-content" class="mesh-main-player" role="application" aria-label="media player">
+			<div class="container">
+				<div class="row">
+					<div class="left-player-side">
+						<div class="mesh-prev">
+							<i class="fa fa-step-backward"></i>
+						</div>
+						<div class="mesh-play">
+							<i class="fa fa-play"></i>
+						</div>
+						<div class="mesh-pause">
+							<i class="fa fa-pause"></i>
+						</div>
+						<div class="mesh-next">
+							<i class="fa fa-step-forward"></i>
+						</div>
+					</div>
+					<div class="center-side">
+						<div class="mesh-current-time">
+						</div>
+						<div class="mesh-seek-bar">
+							<div class="mesh-play-bar">
+							</div>
+						</div>
+						<div class="mesh-duration">
+						</div>
+					</div>
+					<div class="right-player-side">
+						<div class="mesh-thumbnail">
+							<img src="assets/img/albums/cover4.jpg" alt="">
+						</div>
+						<div class="mesh-title">
+						</div>
+						<div class="mesh-artist">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- =============== FIN PLAYER ================ -->
+	<!-- =============== INICIO TOP HEADER ================ -->
+	<div class="topHeader" >
+		<div class="header">
+			<div class="rightTopHeader">
+				<!-- Open Menu Button -->
+				<a class="open-menu">
+					<!-- Buttons Bars -->
+					<span class="span-1"></span>
+					<span class="span-2"></span>
+					<span class="span-3"></span>
+				</a>
+			</div><!-- FIN rightTopHeader -->
+		</div><!-- FIN header -->
+		<!-- Menu Fixed Container -->
+		<div class="menu-fixed-container">
+			<!-- Menu Fixed Centred Container -->
+			<nav>
+				<!-- Menu Fixed Close Button -->
+				<div class="x-filter">
+					<span></span>
+					<span></span>
+				</div>
+				<!-- Menu Fixed Primary List -->
+				<div style="width:80%; max-width:600px; margin:auto; padding-top: 20px;">
+				<h3>Gracias.</h3>
+                <br>
+                <p style="text-align:justify; font-size:1.5rem; line-height:2rem;">Superhéroes para fue la banda que escuché durante mi adolescencia, que tal vez no sirvió para desarrollar mi oído musical pero sí me hizo compartir grandes momentos con mis amigos. Por eso le estoy agradecido, y por eso esta web me pareció una forma de reconocerle algo a un grupo de personas que me regaló muchas horas de diversión.</p>
+                <br>
+                <p style="text-align:justify; font-size:1.5rem; line-height:2rem;">Ojalá lo disfruten tanto como yo.</p>
+                <br>
+                <p style="text-align:right; font-weight:bold; font-size:1.5rem; line-height:2rem;">Fede.</p>
+                </div>
+				<!-- Menu Fixed Close Button -->
+			</nav>
+		</div><!-- FIN menu-fixed-container -->
+		<!-- =============== STAR LOGO ================ -->
+		<div class="logo-container-top">
+			<a href="http://www.superheroes.com.ar" style="text-decoration:none;"><span style="font-family:'Conv_BebasNeue Regular'; font-weight:bold; color:#FFF; font-size:3.5rem;">SUPERHEROES</span></a>
+		</div><!-- FIN logo-container-top -->
+		<!-- =============== FIN LOGO ================ -->
+	</div><!-- FIN topHeader -->
+	<!-- =============== FIN TOP HEADER ================ -->
+	
+	<!-- =============== INICIO BREADCRUMB ================ -->
+	<section class="no-mb">
+		<div class="row">
+			<div class="col-sm-12">
+				<div class="before-FullscreenSlider"></div>
+				<div class="breadcrumb-fullscreen-parent phone-menu-bg">
+					<div class="breadcrumb breadcrumb-fullscreen alignleft small-description overlay almost-black-overlay" style="background-image: url('assets/img/albums/partidocodificado_main.jpg');" data-stellar-background-ratio="0.5" data-stellar-vertical-offset="0">
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- =============== FIN BREADCRUMB ================ -->
+
+	<!-- =============== INICIO ALBUM SINGLE ================ -->
+	<section class="albumSingle padding background-properties">
+		<div class="container">
+			<div class="sectionTitle paddingBottom">
+				<span class="heading-t3"></span>
+				<h2>EL PARTIDO CODIFICADO DEL DOMINGO</h2>
+				<span class="heading-b3"></span>
+			</div><!-- FIN sectionTtile -->
+			<div class="row">
+				<div class="col-sm-8">
+					<div class="jp-playlist">
+						<div class="about-list clearfix">
+							<span class="about-name">TEMA</span>
+							<span class="about-length">DURACIÓN</span>
+						</div>
+						<div class="trak-item" data-audio="assets/audio/partidocodificado/01.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/01.mp3" title="Golosinas"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										Golosinas
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+						<div class="trak-item" data-audio="assets/audio/partidocodificado/02.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/02.mp3" title="Brillantina"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>										
+										Brillantina
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+						<div class="trak-item" data-audio="assets/audio/partidocodificado/03.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/03.mp3" title="Germinación"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										Germinación
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+
+						<div class="trak-item" data-audio="assets/audio/partidocodificado/04.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/04.mp3" title="La revisación"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										La revisación
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+						<div class="trak-item" data-audio="assets/audio/partidocodificado/05.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/05.mp3" title="El arbolito del amor"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>										
+										El arbolito del amor
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+						<div class="trak-item" data-audio="assets/audio/partidocodificado/06.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/06.mp3" title="Pincha, rompe, cuelga, garpa"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										Pincha, rompe, cuelga, garpa
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+                        <div class="trak-item" data-audio="assets/audio/partidocodificado/07.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/07.mp3" title="Bombero loco"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										Bombero loco
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+                        <div class="trak-item" data-audio="assets/audio/partidocodificado/08.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/08.mp3" title="Pediculosis"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										Pediculosis
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+                        <div class="trak-item" data-audio="assets/audio/partidocodificado/09.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/09.mp3" title="El Mundo de Ante Garmaz"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										El Mundo de Ante Garmaz
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+                        <div class="trak-item" data-audio="assets/audio/partidocodificado/10.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/10.mp3" title="El recreo"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										El recreo
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+                        <div class="trak-item" data-audio="assets/audio/partidocodificado/11.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/11.mp3" title="El rock del guardapolvo"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										El rock del guardapolvo
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+                        <div class="trak-item" data-audio="assets/audio/partidocodificado/12.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/12.mp3" title="Lever Wurst"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										Lever Wurst
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+                        <div class="trak-item" data-audio="assets/audio/partidocodificado/13.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/13.mp3" title="Zapping"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										Zapping
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+                        <div class="trak-item" data-audio="assets/audio/partidocodificado/14.mp3" data-artist="Superheroes" data-thumbnail="assets/img/albums/cover4.jpg">
+							<audio preload="metadata" src="assets/audio/partidocodificado/14.mp3" title="Antiparras Buen Nado"></audio>
+							<div class="play-pause-button">
+								<div class="center-y-table">
+									<i class="fa fa-play"></i>
+								</div>
+							</div>
+							<div class="name-artist">
+								<div class="center-y-table">
+									<h2>
+										Antiparras Buen Nado
+								  </h2>
+								</div>
+							</div>
+							<time class="trak-duration">
+								00:00
+							</time>
+						</div>
+					</div>
+				</div><!-- end-col-sm-8 -->
+				<div class="col-sm-3 col-sm-offset-1">
+					<div class="sidebarAlbum">
+						<div class="widget">
+							<h3>Descargar en MP3</h3>
+							<section>
+							  <ul id='services'>
+							    <li>
+							      <a href="http://www.paywithapost.de/pay?id=b3afcd75-0daf-45c8-a7fd-342c379492c2" target="_blank" onclick="trackOutboundLink('http://www.paywithapost.de/pay?id=b3afcd75-0daf-45c8-a7fd-342c379492c2'); return false;"><div><i class="fa fa-cloud-download" aria-hidden="true"></i></div></a>
+							    </li>
+							  </ul>
+							</section>
+						</div><!-- FIN widget -->
+					</div><!-- FIN sidebarAlbum -->
+				</div><!-- FIN col-sm-3 col-sm-offset-1 -->
+			</div><!-- FIN row -->
+		</div><!-- FIN container -->
+	</section>
+	<!-- =============== FIN ALBUM SINGLE ================ -->
+
+	<!-- =============== INICIO PAGINATION ================ -->
+	<div class="section-block  bkg-grey-ultralight pagination-2">
+		<div class="row full-width ">
+			<div class="col-sm-6 leftHover" style="background-image: url('assets/img/albums/albumverdeFooter.jpg');">
+				<a href="escolares" class="pagination-previous">
+					<small>Anterior</small>
+					<span>Escolares</span>
+				</a>
+			</div>
+			<!--<div class="col-sm-6 rightHover" style="background-image: url('assets/img/albums/viejasporqueriasFooter.jpg');">
+				<a href="viejas-porquerias" class="pagination-next ">
+					<small>Siguiente</small>
+					<span>Viejas Porquerías</span>
+				</a>
+			</div>-->
+            <div class="col-sm-6 rightHover" style="background-image: url('assets/img/albums/rockandpopFooter.jpg');">
+				<a href="rock-and-pop-en-vivo" class="pagination-next ">
+					<small>Siguiente</small>
+					<span>Rock & Pop en Vivo</span>
+				</a>
+			</div>
+		</div>
+	</div>
+	<!-- =============== FIN PAGINATION ================ -->
+
+	<!-- =============== INICIO FOOTER ================ -->
+	<section style="background-color:#eeeeee;">
+		<div class="footer footerPadding">
+			<div class="container">
+				<div class="row">
+					<div class="col-sm-5">
+						<div class="copyFooter">
+							<a href="http://www.fedenelli.com/" target="_blank">Hecho por Fede Nelli en homenaje a Superhéroes</a>
+						</div>
+					</div>
+					<div class="col-sm-3">
+						<nav class="social-icons">
+							<ul class="clearfix">
+								<li><a href="https://www.facebook.com/estoyout/" class="icon-button shopIcon" target="_blank"><i class="fa fa-facebook"></i><span></span></a></li>
+								<li><a href="https://twitter.com/superheroestw" class="icon-button shopIcon" target="_blank"><i class="fa fa-twitter"></i><span></span></a></li>
+								<li><a href="https://superheroes.bandcamp.com/" class="icon-button shopIcon" target="_blank"><i class="fa fa-music"></i><span></span></a></li>
+								<li><a href="https://www.youtube.com/user/iwantyouaround" class="icon-button shopIcon" target="_blank"><i class="fa fa-youtube-play"></i><span></span></a></li>
+							</ul>
+						</nav>
+					</div>
+					<div class="col-sm-4">
+						<div class="goTop back-to-top" id="back-to-top">
+							<i class="fa fa-angle-up"></i>
+							<a href="#">Volver Arriba</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- =============== FIN FOOTER ================ -->
+
+	<!-- ================================================== -->
+	<!-- =============== INICIO JQUERY SCRIPTS ================ -->
+	<!-- ================================================== -->
+
+	<script src="assets/js/jquery.js"></script>
+	<script src="assets/js/bootstrap.min.js"></script>
+	<script src="assets/js/plugins.js"></script>
+	<script type="text/javascript" src="assets/jplayer/jplayer/jquery.jplayer.js"></script>
+	<script src="assets/js/jPlayer.js"></script>
+	<script src="assets/js/mainVideo.js"></script>
+
+	<!--[if lte IE 9 ]>
+		<script src="assets/js/placeholder.js"></script>
+		<script>
+			jQuery(function() {
+				jQuery('input, textarea').placeholder();
+			});
+		</script>
+	<![endif]-->
+	
+	<!-- ================================================== -->
+	<!-- =============== FIN JQUERY SCRIPTS ================ -->
+	<!-- ================================================== -->
+</body>
+</html>
