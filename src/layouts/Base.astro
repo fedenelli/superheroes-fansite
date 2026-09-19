@@ -6,17 +6,10 @@ import { SITE } from '../data/site';
 export interface Props {
   /** <title> contents. */
   title: string;
-  /** meta description + twitter:description. */
+  /** meta description, og:description and twitter:description. */
   description: string;
-  /** og:title. Falls back to the page title. */
+  /** og:title and twitter:title. Falls back to the page title. */
   ogTitle?: string;
-  /**
-   * twitter:title. Defaults to ogTitle — but several legacy pages deliberately
-   * differ between the two, so it is settable.
-   */
-  twitterTitle?: string;
-  /** twitter:description. Defaults to `description`, which again some pages diverge from. */
-  twitterDescription?: string;
   /** Path this page canonically lives at, e.g. '/album-verde' or ''. */
   path?: string;
   /** Filenames inside /assets/og_img/. Omitted on pages that never had a card image. */
@@ -34,8 +27,6 @@ const {
   title,
   description,
   ogTitle = title,
-  twitterTitle = ogTitle,
-  twitterDescription = description,
   path = '',
   ogImage,
   twitterImage,
@@ -66,11 +57,12 @@ const logoStyle = isHome
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content={SITE.twitter} />
-    <meta name="twitter:title" content={twitterTitle} />
-    <meta name="twitter:description" content={twitterDescription} />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={description} />
     {twitterImage && <meta name="twitter:image" content={`${SITE.origin}/assets/og_img/${twitterImage}`} />}
     <meta property="og:type" content="profile" />
     <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     {ogImage && <meta property="og:image" content={`${SITE.origin}/assets/og_img/${ogImage}`} />}
 

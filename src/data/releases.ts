@@ -9,19 +9,10 @@ export interface Track {
   duration: number | null;
 }
 
-/**
- * One half of the prev/next footer.
- *
- * `linkClass` is carried per link rather than derived from the side: the two
- * oldest pages use `pagination-previous` on the left, the seven newer ones
- * reuse `pagination-next` on both sides, and the CSS aligns those differently.
- * Preserved as-is so the migration introduces no visual change.
- */
+/** One half of the prev/next footer. Its kicker and alignment come from the side it sits on. */
 export interface PageLink {
   href: string;
   label: string;
-  kicker: string;
-  linkClass: string;
   image: string;
 }
 
@@ -31,10 +22,8 @@ export interface Release {
   /** Verbatim <h2>; casing and accents are inconsistent across pages by design. */
   heading: string;
   description: string;
+  /** og:title and twitter:title. */
   ogTitle: string;
-  /** Several pages word twitter:title and twitter:description differently from the og/meta pair. */
-  twitterTitle: string;
-  twitterDescription: string;
   ogImage: string;
   twitterImage: string;
   heroImage: string;
@@ -54,8 +43,6 @@ export const RELEASES: Release[] = [
     heading: "ALBUM VERDE",
     description: "El primer demo de Superhéroes. Un disco que seguro no cambió la historia del rock.",
     ogTitle: "Superhéroes - Álbum Verde",
-    twitterTitle: "Superhéroes - Álbum Verde",
-    twitterDescription: "El primer demo de Superhéroes. Un disco que seguro no cambió la historia del rock.",
     ogImage: "fbalbumverde.png",
     twitterImage: "twalbumverde.png",
     heroImage: "/assets/img/albums/album-verde_main.jpg",
@@ -64,15 +51,11 @@ export const RELEASES: Release[] = [
     prev: {
       href: "/",
       label: "Discografía",
-      kicker: "Anterior",
-      linkClass: "pagination-previous",
       image: "/assets/img/albums/discosFooter.jpg",
     },
     next: {
       href: "/como-va-la-reserva",
       label: "Cómo va la Reserva",
-      kicker: "Siguiente",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/comovalareservaFooter.jpg",
     },
     tracks: [
@@ -90,8 +73,6 @@ export const RELEASES: Release[] = [
     heading: "COMO VA LA RESERVA",
     description: "Cómo va la Reserva, el demo que contiene el único hit de Superhéroes: He-man. Curiosamente se negaron a tocarlo durante 20 años.",
     ogTitle: "Superhéroes - Cómo va la Reserva",
-    twitterTitle: "Superhéroes - Cómo va la Reserva",
-    twitterDescription: "Cómo va la Reserva, el demo que contiene el único hit de Superhéroes: He-man. Curiosamente se negaron a tocarlo durante 20 años.",
     ogImage: "fbcomovalareserva.png",
     twitterImage: "twcomovalareserva.png",
     heroImage: "/assets/img/albums/como-va-la-reserva_main.jpg",
@@ -100,15 +81,11 @@ export const RELEASES: Release[] = [
     prev: {
       href: "/album-verde",
       label: "Álbum Verde",
-      kicker: "Anterior",
-      linkClass: "pagination-previous",
       image: "/assets/img/albums/albumverdeFooter.jpg",
     },
     next: {
       href: "/escolares",
       label: "Escolares",
-      kicker: "Siguiente",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/escolaresFooter.jpg",
     },
     tracks: [
@@ -132,8 +109,6 @@ export const RELEASES: Release[] = [
     heading: "ESCOLARES",
     description: "Este es el disco que seguro no escuchaste cuando ibas al colegio. Pero no es culpa de Superhéroes. Es culpa de Xuxa.",
     ogTitle: "Superhéroes - Escolares",
-    twitterTitle: "Superhéroes - Escolares",
-    twitterDescription: "Este es el disco que seguro no escuchaste cuando ibas al colegio. Pero no es culpa de Superhéroes. Es culpa de Xuxa.",
     ogImage: "fbescolares.png",
     twitterImage: "twescolares.png",
     heroImage: "/assets/img/albums/escolares_main.jpg",
@@ -142,15 +117,11 @@ export const RELEASES: Release[] = [
     prev: {
       href: "/como-va-la-reserva",
       label: "Cómo va la Reserva",
-      kicker: "Anterior",
-      linkClass: "pagination-previous",
       image: "/assets/img/albums/comovalareservaFooter.jpg",
     },
     next: {
       href: "/el-partido-codificado-del-domingo",
       label: "El Partido Codificado del Domingo",
-      kicker: "Siguiente",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/partidocodificadoFooter.jpg",
     },
     tracks: [
@@ -175,8 +146,6 @@ export const RELEASES: Release[] = [
     heading: "EL PARTIDO CODIFICADO DEL DOMINGO",
     description: "Un disco con hits. Bah, en realidad no. Pero el tema en el que juegan con el dial de la radio está muy bueno.",
     ogTitle: "Superhéroes - El Partido Codificado del Domingo",
-    twitterTitle: "Superhéroes - El Partido Codificado del Domingo",
-    twitterDescription: "Un disco con hits. Bah, en realidad no. Pero el tema en el que juegan con el dial de la radio está muy bueno.",
     ogImage: "fbpartidocodificado.png",
     twitterImage: "twpartidocodificado.png",
     heroImage: "/assets/img/albums/partidocodificado_main.jpg",
@@ -185,15 +154,11 @@ export const RELEASES: Release[] = [
     prev: {
       href: "/escolares",
       label: "Escolares",
-      kicker: "Anterior",
-      linkClass: "pagination-previous",
       image: "/assets/img/albums/albumverdeFooter.jpg",
     },
     next: {
       href: "/viejas-porquerias",
       label: "Viejas Porquerías",
-      kicker: "Siguiente",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/viejasporqueriasFooter.jpg",
     },
     tracks: [
@@ -219,8 +184,6 @@ export const RELEASES: Release[] = [
     heading: "Viejas porquerías que no entraron en ningún disco",
     description: "Rejunte de temas viejos, demos y demás. Diría que es un tesoro perdido, pero estaría mintiendo.",
     ogTitle: "Superhéroes - Viejas Porquerías",
-    twitterTitle: "Superhéroes - Viejas Porquerías",
-    twitterDescription: "Rejunte de temas viejos, demos y demás. Diría que es un tesoro perdido, pero estaría mintiendo.",
     ogImage: "fbviejasporquerias.png",
     twitterImage: "twviejasporquerias.png",
     heroImage: "/assets/img/albums/viejas-porquerias_main.jpg",
@@ -229,15 +192,11 @@ export const RELEASES: Release[] = [
     prev: {
       href: "/el-partido-codificado-del-domingo",
       label: "Partido Codificado del Domingo",
-      kicker: "Anterior",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/partidocodificadoFooter.jpg",
     },
     next: {
       href: "/chiche-gelblung-presenta",
       label: "Chiche Gelblung Presenta",
-      kicker: "Siguiente",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/chicheFooter.jpg",
     },
     tracks: [
@@ -277,9 +236,7 @@ export const RELEASES: Release[] = [
     title: "Chiche Gelblung Presenta",
     heading: "Chiche Gelblung Presenta: Superhéroes",
     description: "Temas de los primeros dos discos de estudio de Superhéroes, presentados por Chiche Gelblung.",
-    ogTitle: "Superhéroes - Chiche Gelbung Presenta",
-    twitterTitle: "Superhéroes - Chiche Gelbung Presenta",
-    twitterDescription: "Temas de los primeros dos discos de estudio de Superhéroes, presentados por el gran Chiche Gelblung.",
+    ogTitle: "Superhéroes - Chiche Gelblung Presenta",
     ogImage: "fbchiche.jpg",
     twitterImage: "twchiche.jpg",
     heroImage: "/assets/img/albums/chiche_main.jpg",
@@ -288,15 +245,11 @@ export const RELEASES: Release[] = [
     prev: {
       href: "/viejas-porquerias",
       label: "Viejas Porquerías",
-      kicker: "Anterior",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/viejasporqueriasFooter.jpg",
     },
     next: {
       href: "/rock-and-pop-en-vivo",
       label: "Rock & Pop en Vivo",
-      kicker: "Siguiente",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/rockandpopFooter.jpg",
     },
     tracks: [
@@ -321,8 +274,6 @@ export const RELEASES: Release[] = [
     heading: "En vivo en Rock & Pop - 6/10/2000",
     description: "Sí. Superhéroes tocó en la Rock & Pop. Con entrevista y todo. No es chiste.",
     ogTitle: "Superhéroes - En Vivo en Rock & Pop",
-    twitterTitle: "Superhéroes - Vivo en Rock & Pop",
-    twitterDescription: "Sí. Superhéroes tocó en la Rock & Pop. Con entrevista y todo. No es chiste.",
     ogImage: "fbrockandpop.png",
     twitterImage: "twrockandpop.png",
     heroImage: "/assets/img/albums/rockandpop_main.jpg",
@@ -331,15 +282,11 @@ export const RELEASES: Release[] = [
     prev: {
       href: "/chiche-gelblung-presenta",
       label: "Chiche Gelblung Presenta",
-      kicker: "Anterior",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/chicheFooter.jpg",
     },
     next: {
       href: "/fm-patricios-en-vivo",
       label: "FM Patricios en vivo",
-      kicker: "Anterior",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/fmpatriciosFooter.jpg",
     },
     tracks: [
@@ -359,10 +306,8 @@ export const RELEASES: Release[] = [
     slug: "fm-patricios-en-vivo",
     title: "En vivo en FM Patricios",
     heading: "En vivo en FM Patricios - 7/10/2001",
-    description: "Sí. Superhéroes tocó en la Rock & Pop. Con entrevista y todo. No es chiste.",
+    description: "Superhéroes en vivo en FM Patricios, el 7 de octubre de 2001. Temas tocados al aire y una entrevista con la banda.",
     ogTitle: "Superhéroes en Vivo en FM Patricios",
-    twitterTitle: "Superhéroes en Vivo en FM Patricios",
-    twitterDescription: "Sitio web no oficial de Superhéroes.",
     ogImage: "fbprofile.png",
     twitterImage: "twprofile.jpg",
     heroImage: "/assets/img/albums/fmpatricios_main.jpg",
@@ -371,15 +316,11 @@ export const RELEASES: Release[] = [
     prev: {
       href: "/rock-and-pop-en-vivo",
       label: "Rock & Pop en Vivo",
-      kicker: "Anterior",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/rockandpopFooter.jpg",
     },
     next: {
       href: "/salon-pueyrredon-en-vivo",
       label: "En vivo en Salón Pueyrredon",
-      kicker: "Siguiente",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/salonpueyrredonFooter.jpg",
     },
     tracks: [
@@ -397,9 +338,7 @@ export const RELEASES: Release[] = [
     title: "En vivo en Salón Pueyrredón",
     heading: "En vivo en Salón Pueyrredón - 7/7/2012",
     description: "Grabación en vivo de uno de sus últimos recitales. Tal vez el mejor. Digo tal vez porque dudo que Bobby Flores pueda salir a desmentirme.",
-    ogTitle: "Superhéroes - En Vivo en Salon Pueyrredón",
-    twitterTitle: "Superhéroes - Vivo en Salón Pueyrredón",
-    twitterDescription: "Grabación en vivo de uno de sus últimos recitales. Tal vez el mejor. Digo tal vez porque dudo que Bobby Flores pueda salir a desmentirme.",
+    ogTitle: "Superhéroes - En Vivo en Salón Pueyrredón",
     ogImage: "fbsalonpueyrredon.png",
     twitterImage: "twsalonpueyrredon.png",
     heroImage: "/assets/img/albums/salonpueyrredon_main.jpg",
@@ -408,15 +347,11 @@ export const RELEASES: Release[] = [
     prev: {
       href: "/fm-patricios-en-vivo",
       label: "FM Patricios en vivo",
-      kicker: "Anterior",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/fmpatriciosFooter.jpg",
     },
     next: {
       href: "/discografia",
       label: "Discografía",
-      kicker: "Siguiente",
-      linkClass: "pagination-next",
       image: "/assets/img/albums/discosFooter.jpg",
     },
     tracks: [

@@ -16461,3 +16461,8 @@ body.opacityPlaylist .main-music-player .mesh-title {
     width: 18rem;
   }
 }
+/* Bootstrap 3 draws its focus ring on every focus, mouse clicks included.
+   Keep it for keyboard navigation only. */
+html :focus:not(:focus-visible) {
+  outline: none;
+}
