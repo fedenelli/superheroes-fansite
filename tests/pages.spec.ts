@@ -6,26 +6,56 @@ import { test, expect } from '@playwright/test';
  * driven from `astro:page-load`.
  */
 
-test('juicebox galleries initialise on a client-side navigation', async ({ page }) => {
-  // Arrive via the home page, so the gallery page is swapped in rather than loaded.
+test('photo sessions are listed and open on a client-side navigation', async ({ page }) => {
+  // Arrive via the home page, so both pages are swapped in rather than loaded.
   await page.goto('/');
   await page.click('a[href="/galeria-de-fotos"]');
   await expect(page).toHaveURL(/galeria-de-fotos$/);
 
-  // Only the page's own containers: Juicebox nests another .juicebox-gallery inside each once it boots.
-  const containers = page.locator('.juicebox-gallery[data-config]');
-  await expect(containers).toHaveCount(3);
+  const sesiones = page.locator('a.shf-sesion');
+  await expect(sesiones).toHaveCount(3);
 
-  // Juicebox replaces the container's contents once it boots.
-  for (let i = 0; i < 3; i++) {
-    await expect
-      .poll(async () => (await containers.nth(i).innerHTML()).length, {
-        message: `gallery ${i + 1} should be populated`,
-        timeout: 20_000,
-      })
-      .toBeGreaterThan(0);
-  }
-  await expect(containers.first()).toHaveAttribute('data-jb-init', 'true');
+  await page.click('a.shf-sesion[href="/galeria-de-fotos/roxy-2007-07-08"]');
+  await expect(page).toHaveURL(/galeria-de-fotos\/roxy-2007-07-08$/);
+  await expect(page.locator('a.shf-abrir')).toHaveCount(21);
+  // The header still marks Fotos as the current section.
+  await expect(page.locator('.shh-link[href="/galeria-de-fotos"]')).toHaveClass(/is-active/);
+});
+
+test('the viewer opens a photo, steps through, and closes', async ({ page }) => {
+  await page.goto('/galeria-de-fotos/sira-2007-06-17');
+  const visor = page.locator('dialog.shv');
+  const img = visor.locator('[data-shv="img"]');
+  const numero = visor.locator('[data-shv="numero"]');
+
+  await page.locator('a.shf-abrir').nth(2).click();
+  await expect(visor).toBeVisible();
+  await expect(numero).toHaveText('3');
+  await expect(page).toHaveURL(/#foto-3$/);
+  // The full-size copy replaces the thumbnail once it has loaded.
+  await expect(img).toHaveAttribute('src', (await visor.locator('.shv-mini').nth(2).getAttribute('data-grande'))!);
+  expect(await img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+
+  await page.keyboard.press('ArrowRight');
+  await expect(numero).toHaveText('4');
+  await expect(page).toHaveURL(/#foto-4$/);
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await expect(numero).toHaveText('2');
+
+  await visor.locator('.shv-mini').nth(9).click();
+  await expect(numero).toHaveText('10');
+
+  await page.keyboard.press('Escape');
+  await expect(visor).toBeHidden();
+  // The dialog's close event is queued after it hides, so poll.
+  await expect(page).toHaveURL(/sira-2007-06-17$/);
+});
+
+test('a #foto-n link opens the viewer on that photo', async ({ page }) => {
+  await page.goto('/galeria-de-fotos/el-teatrito-2007-08-18#foto-12');
+  await expect(page.locator('dialog.shv')).toBeVisible();
+  await expect(page.locator('[data-shv="numero"]')).toHaveText('12');
 });
 
 test('every navigation is announced to GTM', async ({ page }) => {
@@ -93,25 +123,16 @@ test.describe('on a phone', () => {
   });
 });
 
-test('juicebox galleries still render on a second client-side visit', async ({ page }) => {
-  const missing: string[] = [];
-  page.on('response', (r) => {
-    if (r.status() === 404) missing.push(r.url());
-  });
-
-  await page.goto('/galeria-de-fotos');
-  await expect(page.locator('.juicebox-gallery[data-config]').first()).toHaveAttribute('data-jb-init', 'true');
+test('the viewer is rebound once per visit, not stacked', async ({ page }) => {
+  await page.goto('/galeria-de-fotos/roxy-2007-07-08');
   await page.click('.shh-link[href="/gracias"]');
   await expect(page).toHaveURL(/gracias$/);
-  await page.click('.shh-link[href="/galeria-de-fotos"]');
-  await expect(page).toHaveURL(/galeria-de-fotos$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/roxy-2007-07-08$/);
 
-  // The theme stylesheet must still be the real one, not a root-relative 404.
-  const theme = page.locator('head link[href*="/galleries/jbcore/classic/theme.css"]');
-  await expect(theme).toHaveCount(1);
-  // Unstyled Juicebox still fills the container, so check it actually has a size.
-  await expect
-    .poll(async () => (await page.locator('.juicebox-gallery[data-config]').first().boundingBox())?.height ?? 0)
-    .toBeGreaterThan(200);
-  expect(missing.filter((u) => u.includes('theme.css'))).toEqual([]);
+  await page.locator('a.shf-abrir').first().click();
+  await expect(page.locator('dialog.shv')).toBeVisible();
+  // Two stacked keydown handlers would jump two photos.
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('[data-shv="numero"]')).toHaveText('2');
 });

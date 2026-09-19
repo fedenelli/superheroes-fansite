@@ -14,7 +14,10 @@ export interface Props {
   ogTitle?: string;
   /** Path this page canonically lives at, e.g. '/album-verde' or ''. */
   path?: string;
-  /** Filenames inside /assets/og_img/. Omitted on pages that never had a card image. */
+  /**
+   * Filenames inside /assets/og_img/, or a root-relative path (e.g. a built
+   * image under /_astro/). Omitted on pages that never had a card image.
+   */
   ogImage?: string;
   twitterImage?: string;
   /**
@@ -40,6 +43,7 @@ const {
 
 const isHome = variant === 'home';
 const canonical = `${SITE.origin}${path}`;
+const cardUrl = (file: string) => `${SITE.origin}${file.startsWith('/') ? file : `/assets/og_img/${file}`}`;
 ---
 
 <!DOCTYPE html>
@@ -66,12 +70,12 @@ const canonical = `${SITE.origin}${path}`;
     <meta name="twitter:site" content={SITE.twitter} />
     <meta name="twitter:title" content={ogTitle} />
     <meta name="twitter:description" content={description} />
-    {twitterImage && <meta name="twitter:image" content={`${SITE.origin}/assets/og_img/${twitterImage}`} />}
+    {twitterImage && <meta name="twitter:image" content={cardUrl(twitterImage)} />}
     <meta property="og:type" content="profile" />
     <meta property="og:title" content={ogTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    {ogImage && <meta property="og:image" content={`${SITE.origin}/assets/og_img/${ogImage}`} />}
+    {ogImage && <meta property="og:image" content={cardUrl(ogImage)} />}
 
     <ClientRouter />
   </head>

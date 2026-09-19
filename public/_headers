@@ -30,11 +30,6 @@
 /assets/loader/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Gallery photos never change; the XML configs occasionally do, but they are
-# matched by this same rule, so keep the TTL moderate.
-/assets/galleries/*
-  Cache-Control: public, max-age=86400
-
 # Not fingerprinted — revalidate so a redeploy is picked up promptly.
 /assets/css/*
   Cache-Control: public, max-age=3600, must-revalidate

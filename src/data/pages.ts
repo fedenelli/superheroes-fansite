@@ -1,4 +1,4 @@
-/** Content for the pages that are not releases: home grid, /discografia, /galeria-de-fotos. */
+/** Content for the pages that are not releases: home grid and /discografia. Photos live in fotos.ts. */
 
 export interface GridTile {
   href: string;
@@ -72,17 +72,4 @@ export const STUDIO_ALBUMS: StudioAlbum[] = [
     background: '/assets/img/albums/a4.jpg',
     links: [{ href: 'https://superheroes.bandcamp.com/album/game-over', label: 'Escuchar' }],
   },
-];
-
-export interface Gallery {
-  heading: string;
-  configUrl: string;
-  containerId: string;
-}
-
-/** /galeria-de-fotos — three Juicebox galleries, in the order the page shows them. */
-export const GALLERIES: Gallery[] = [
-  { heading: 'Sira - 17/06/2007', configUrl: '/assets/galleries/config02.xml', containerId: 'juicebox-container1' },
-  { heading: 'Roxy - 08/07/2007', configUrl: '/assets/galleries/config01.xml', containerId: 'juicebox-container2' },
-  { heading: 'El Teatrito - 18/08/2007', configUrl: '/assets/galleries/config03.xml', containerId: 'juicebox-container3' },
 ];

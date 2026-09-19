@@ -59,6 +59,14 @@ html body .titulo .dymo {
   line-height: 2.1;
   letter-spacing: 0.24em;
 }
+/* A line of small print right under a title (e.g. "3 sesiones · 91 fotos"). */
+html body .titulo-bajada {
+  margin: -5rem 0 6rem;
+  text-align: center;
+  font: 400 1.6rem/1.5 var(--dymo-font);
+  letter-spacing: 0.08em;
+  color: #333;
+}
 
 /*
  * ---- nota: prose on a photocopied sheet taped onto the paper ----

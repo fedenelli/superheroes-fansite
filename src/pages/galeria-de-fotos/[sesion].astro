@@ -1,0 +1,212 @@
+---
+import { getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Titulo from '../../components/Titulo.astro';
+import Visor from '../../components/Visor.astro';
+import { SESIONES, sesionHref, fechaCorta, fechaLarga, versiones, type SesionConFotos } from '../../data/fotos';
+
+export function getStaticPaths() {
+  return SESIONES.map((sesion, i) => ({
+    params: { sesion: sesion.slug },
+    props: { sesion, anterior: SESIONES[i - 1], siguiente: SESIONES[i + 1] },
+  }));
+}
+
+interface Props {
+  sesion: SesionConFotos;
+  anterior?: SesionConFotos;
+  siguiente?: SesionConFotos;
+}
+
+const { sesion, anterior, siguiente } = Astro.props;
+const titulo = `${sesion.lugar} · ${fechaCorta(sesion.fecha)}`;
+
+const fotos = (await Promise.all(sesion.fotos.map(versiones))).map((v, i) => ({
+  ...v,
+  alt: `Superhéroes en ${sesion.lugar}, ${fechaCorta(sesion.fecha)} — foto ${i + 1} de ${sesion.fotos.length}`,
+}));
+
+// Share card: the cover, cropped to the 1.91:1 that Facebook and Twitter expect.
+const tarjeta = await getImage({ src: sesion.portadaFoto.image, width: 1200, height: 630, fit: 'cover', format: 'jpg' });
+---
+
+<Base
+  title={`${sesion.lugar} ${fechaCorta(sesion.fecha)} — Fotos — Superheroes`}
+  description={`${sesion.fotos.length} fotos de Superhéroes en ${sesion.lugar}, el ${fechaLarga(sesion.fecha)}.`}
+  ogTitle={`Superhéroes en ${sesion.lugar} - ${fechaCorta(sesion.fecha)}`}
+  path={sesionHref(sesion)}
+  ogImage={tarjeta.src}
+  twitterImage={tarjeta.src}
+>
+  <!-- =============== INICIO SESION ================ -->
+  <section class="albumSingle padding background-properties">
+    <div class="container">
+      <a href="/galeria-de-fotos" class="shf-volver">← Todas las fotos</a>
+
+      <Titulo>{sesion.lugar}</Titulo>
+      <p class="titulo-bajada">
+        {fechaLarga(sesion.fecha)} · {sesion.fotos.length} fotos{sesion.credito && ` · Fotos: ${sesion.credito}`}
+      </p>
+
+      <!-- A contact sheet: rows keep every photo's own proportions, no cropping. -->
+      <ol class="shf-hoja">
+        {
+          fotos.map((foto, i) => (
+            <li class="shf-foto" style={`--r:${(foto.ancho / foto.alto).toFixed(4)}`}>
+              <a href={foto.original} class="shf-abrir" data-foto={i} data-astro-reload>
+                <img src={foto.mini} alt={foto.alt} width={foto.ancho} height={foto.alto} loading="lazy" decoding="async" />
+              </a>
+              <span class="shf-cuadro" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+
+      {
+        (anterior || siguiente) && (
+          <nav class="shf-otras" aria-label="Otras sesiones">
+            {anterior ? (
+              <a href={sesionHref(anterior)} class="shf-otra" rel="prev">
+                <span class="shf-otra-dir">← Anterior</span>
+                <span class="dymo">{anterior.lugar}</span>
+                <span class="shf-otra-fecha">{fechaCorta(anterior.fecha)}</span>
+              </a>
+            ) : (
+              <span />
+            )}
+            {siguiente && (
+              <a href={sesionHref(siguiente)} class="shf-otra shf-otra--sig" rel="next">
+                <span class="shf-otra-dir">Siguiente →</span>
+                <span class="dymo">{siguiente.lugar}</span>
+                <span class="shf-otra-fecha">{fechaCorta(siguiente.fecha)}</span>
+              </a>
+            )}
+          </nav>
+        )
+      }
+    </div>
+  </section>
+  <!-- =============== FIN SESION ================ -->
+
+  <Visor titulo={titulo} fotos={fotos} />
+</Base>
+
+<style is:global>
+  html body .shf-volver {
+    display: inline-block;
+    margin-bottom: 4rem;
+    font: 700 1.4rem/1 var(--dymo-font);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #111;
+  }
+  html body .shf-volver:hover,
+  html body .shf-volver:focus-visible {
+    color: #111;
+    text-decoration: underline;
+    text-underline-offset: 0.4rem;
+  }
+
+  /*
+   * ---- contact sheet ----
+   * Justified rows without JS: each photo grows in proportion to its aspect
+   * ratio (--r), so every photo in a row ends up the same height. The ::after
+   * filler soaks up the last row so it isn't stretched.
+   */
+  .shf-hoja {
+    --alto: 20rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem 1rem;
+    margin: 0;
+    padding: 2.4rem 2rem 2rem;
+    list-style: none;
+    background: var(--dymo-tape);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+  .shf-hoja::after {
+    content: '';
+    flex: 10000 1 0;
+  }
+  .shf-foto {
+    flex: calc(var(--r) * 100) 1 calc(var(--r) * var(--alto));
+    min-width: 0;
+  }
+  html body .shf-abrir {
+    display: block;
+    outline-offset: 3px;
+  }
+  .shf-abrir img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--r);
+    background: #2a2a2a;
+    transition: opacity 0.2s;
+  }
+  .shf-abrir:hover img {
+    opacity: 0.82;
+  }
+  .shf-abrir:focus-visible {
+    outline: 3px solid #f0b23c;
+  }
+  /* Frame numbers, in the amber of a film's edge print. */
+  .shf-cuadro {
+    display: block;
+    padding-top: 0.5rem;
+    font: 700 1.1rem/1 var(--dymo-font);
+    letter-spacing: 0.14em;
+    color: #d99a2b;
+  }
+
+  /* ---- previous / next session ---- */
+  .shf-otras {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 8rem;
+  }
+  html body a.shf-otra {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    color: #111;
+    text-decoration: none;
+  }
+  html body a.shf-otra--sig {
+    align-items: flex-end;
+    margin-left: auto;
+  }
+  .shf-otra-dir,
+  .shf-otra-fecha {
+    font: 400 1.4rem/1 var(--dymo-font);
+    letter-spacing: 0.1em;
+    color: #333;
+  }
+  .shf-otra-dir {
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .shf-otra:hover .dymo,
+  .shf-otra:focus-visible .dymo {
+    transform: rotate(-2deg);
+  }
+  .shf-otra .dymo {
+    transition: transform 0.2s;
+  }
+
+  @media (max-width: 767px) {
+    .shf-hoja {
+      --alto: 12rem;
+      gap: 1rem 0.6rem;
+      margin: 0 -1.5rem;
+      padding: 1.4rem 1rem 1.2rem;
+    }
+    .shf-cuadro {
+      font-size: 1rem;
+    }
+  }
+</style>
