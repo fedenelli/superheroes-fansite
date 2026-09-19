@@ -66,7 +66,7 @@ const { titulo, fotos } = Astro.props;
   .shv {
     --shv-fondo: #0e0e0e;
     --shv-tinta: #f4f4f4;
-    --shv-ambar: #f0b23c;
+    --shv-magenta: #ff0080;
     width: 100vw;
     width: 100dvw;
     max-width: none;
@@ -111,7 +111,7 @@ const { titulo, fotos } = Astro.props;
   }
   html body .shv-barra .shv-cuenta {
     font-variant-numeric: tabular-nums;
-    color: var(--shv-ambar);
+    color: var(--shv-magenta);
   }
   .shv-titulo {
     flex: 1;
@@ -129,7 +129,7 @@ const { titulo, fotos } = Astro.props;
   }
   html body a.shv-original:hover,
   html body a.shv-original:focus-visible {
-    color: var(--shv-ambar);
+    color: var(--shv-magenta);
   }
 
   .shv-boton {
@@ -159,7 +159,7 @@ const { titulo, fotos } = Astro.props;
   }
   .shv-boton:focus-visible,
   .shv-mini:focus-visible {
-    outline: 2px solid var(--shv-ambar);
+    outline: 2px solid var(--shv-magenta);
     outline-offset: 2px;
   }
 
@@ -246,7 +246,7 @@ const { titulo, fotos } = Astro.props;
   }
   .shv-mini[aria-current='true'] {
     opacity: 1;
-    box-shadow: 0 0 0 2px var(--shv-ambar);
+    box-shadow: 0 0 0 2px var(--shv-magenta);
   }
 
   @media (max-width: 767px) {
