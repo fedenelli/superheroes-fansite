@@ -1,0 +1,75 @@
+# Deploy a producción (worker "superheroes" → https://superheroes.com.ar)
+# al pushear un tag de versión:  git tag v2.1.0 && git push origin v2.1.0
+#
+# Secrets requeridos en el repo (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   token con el template "Edit Cloudflare Workers"
+#   CLOUDFLARE_ACCOUNT_ID  ID de la cuenta de Cloudflare
+
+name: Deploy
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+# Nunca dos deploys a la vez; si llega un tag nuevo, el anterior termina igual.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+# write: para crear el GitHub Release al final.
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Build, test y deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://superheroes.com.ar
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Instalar Chromium para Playwright
+        run: npx playwright install --with-deps chromium
+
+      # Gate: si los tests fallan, no se publica.
+      - run: npm test
+        env:
+          CI: 'true'
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
+
+      # dist/ ya está construido; `wrangler deploy` directo evita recompilar.
+      - name: Deploy a Cloudflare Workers
+        run: >-
+          npx wrangler deploy
+          --tag "${{ github.ref_name }}"
+          --message "Release ${{ github.ref_name }} (${{ github.sha }})"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Solo si el deploy salió bien. Las notas se arman con los PRs/commits
+      # desde el tag anterior.
+      - name: Crear GitHub Release
+        run: gh release create "${{ github.ref_name }}" --verify-tag --generate-notes --title "${{ github.ref_name }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
