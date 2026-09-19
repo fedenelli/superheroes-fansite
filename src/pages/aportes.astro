@@ -1,0 +1,243 @@
+---
+import Base from '../layouts/Base.astro';
+import Titulo from '../components/Titulo.astro';
+import Visor from '../components/Visor.astro';
+import Correo from '../components/Correo.astro';
+import { APORTES } from '../data/aportes';
+import { versiones } from '../data/fotos';
+
+/**
+ * Every aporte's photos go into one viewer, so the arrows run through the
+ * whole page; each print's data-foto is its index across all aportes.
+ */
+let n = 0;
+const aportes = await Promise.all(
+  APORTES.map(async (aporte) => ({
+    aporte,
+    fotos: (await Promise.all(aporte.fotos.map(versiones))).map((v, i) => ({
+      ...v,
+      alt:
+        aporte.fotos.length > 1
+          ? `${aporte.titulo} — foto ${i + 1} de ${aporte.fotos.length}. Aporte de ${aporte.de}.`
+          : `${aporte.titulo}. Aporte de ${aporte.de}.`,
+    })),
+  }))
+);
+const indexadas = aportes.map(({ aporte, fotos }) => ({ aporte, fotos: fotos.map((f) => ({ ...f, indice: n++ })) }));
+const todas = indexadas.flatMap((a) => a.fotos);
+---
+
+<Base
+  title="Aportes — Superheroes"
+  description={`Material de Superhéroes que mandaron los fans: ${APORTES.map((a) => a.titulo).join(', ')}.`}
+  ogTitle="Superhéroes - Aportes"
+  path="/aportes"
+  ogImage="fbprofile.png"
+  twitterImage="twprofile.jpg"
+>
+  <!-- =============== INICIO APORTES ================ -->
+  <section class="albumSingle padding background-properties">
+    <div class="container">
+      <Titulo>Aportes</Titulo>
+      <p class="titulo-bajada">
+        <a href="#enviar">¿Tenés algo? Mandalo</a>
+      </p>
+
+      <ol class="sha-aportes">
+        {
+          indexadas.map(({ aporte, fotos }) => (
+            <li class="sha-aporte" id={aporte.slug}>
+              <div class="sha-rotulo">
+                <h3 class="sha-titulo">
+                  <span class="dymo">{aporte.titulo}</span>
+                </h3>
+                <p class="sha-de">Aporte de {aporte.de}</p>
+                {aporte.texto && <p class="sha-texto">{aporte.texto}</p>}
+              </div>
+
+              <ul class="sha-copias">
+                {fotos.map((foto) => (
+                  <li class="sha-copia" style={`--r:${(foto.ancho / foto.alto).toFixed(4)}`}>
+                    <a href={foto.original} class="shf-abrir sha-abrir" data-foto={foto.indice} data-astro-reload>
+                      <img src={foto.mini} alt={foto.alt} width={foto.ancho} height={foto.alto} loading="lazy" decoding="async" />
+                    </a>
+                    <span class="sha-cinta" aria-hidden="true" />
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+  <!-- =============== FIN APORTES ================ -->
+
+  <!-- =============== INICIO ENVIAR ================ -->
+  <section class="albumSingle padding background-properties sha-enviar" id="enviar">
+    <div class="container">
+      <Titulo>¿Tenés algo?</Titulo>
+      <article class="nota">
+        <span class="nota-cinta" aria-hidden="true"></span>
+        <p>
+          Si tenés guardado algo de Superhéroes, mandalo a <Correo asunto="Aporte para superheroes.com.ar" />.
+        </p>
+      </article>
+    </div>
+  </section>
+  <!-- =============== FIN ENVIAR ================ -->
+
+  <Visor titulo="Aportes" fotos={todas} />
+</Base>
+
+<style is:global>
+  html body .titulo-bajada a {
+    color: #111;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.3rem;
+  }
+  html body .titulo-bajada a:hover,
+  html body .titulo-bajada a:focus-visible {
+    background: #111;
+    color: #f3efe4;
+    text-decoration: none;
+  }
+
+  .sha-aportes {
+    display: flex;
+    flex-direction: column;
+    gap: 12rem;
+    margin: 0 auto;
+    padding: 0;
+    max-width: 104rem;
+    list-style: none;
+  }
+
+  /* ---- label ---- */
+  .sha-rotulo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    margin-bottom: 4.4rem;
+    text-align: center;
+  }
+  .sha-de {
+    font: 700 1.4rem/1.4 var(--dymo-font);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #333;
+  }
+  html body .sha-titulo {
+    margin: 0;
+    font: inherit;
+    transform: rotate(-1deg);
+  }
+  .sha-titulo .dymo {
+    font-size: 2rem;
+  }
+  html body .sha-de {
+    margin: 0;
+  }
+  html body .sha-texto {
+    max-width: 60rem;
+    margin: 0.8rem 0 0;
+    font: 400 1.6rem/1.6 var(--dymo-font);
+    color: #222;
+  }
+
+  /*
+   * ---- the prints ----
+   * Each keeps its own proportions (--r): its width is what a --alto-tall
+   * print of that ratio needs, capped at the column.
+   */
+  .sha-copias {
+    --alto: 44rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4rem 3.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sha-copia {
+    position: relative;
+    flex: 0 1 calc(var(--r) * var(--alto));
+    min-width: 0;
+    transform: rotate(var(--giro, -0.8deg));
+    transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1.2);
+  }
+  .sha-copia:nth-child(even) {
+    --giro: 1.1deg;
+  }
+  html body .sha-abrir {
+    display: block;
+    /* White print border. */
+    border: 0.9rem solid #fbfaf6;
+    border-bottom-width: 2.6rem;
+    background: #fbfaf6;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    transition: box-shadow 0.3s;
+  }
+  .sha-abrir img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--r);
+    background: #ddd;
+  }
+  .sha-copia:hover,
+  .sha-copia:focus-within {
+    transform: translateY(-0.6rem) rotate(0deg);
+  }
+  .sha-copia:hover .sha-abrir,
+  .sha-copia:focus-within .sha-abrir {
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+  }
+  html body .sha-abrir:focus-visible {
+    outline: 3px solid #111;
+    outline-offset: 4px;
+  }
+  .sha-cinta {
+    position: absolute;
+    top: -1.2rem;
+    left: 50%;
+    width: 8rem;
+    height: 2.4rem;
+    background: rgba(236, 226, 190, 0.82);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    transform: translateX(-50%) rotate(-4deg);
+    pointer-events: none;
+  }
+
+  /* The call to action follows straight on from the list. */
+  html body .sha-enviar {
+    padding-top: 0;
+  }
+
+  @media (max-width: 767px) {
+    .sha-aportes {
+      gap: 8rem;
+    }
+    .sha-copias {
+      --alto: 36rem;
+      gap: 3.2rem;
+    }
+    .sha-copia {
+      flex-basis: 100%;
+    }
+    html body .sha-texto {
+      font-size: 1.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sha-copia,
+    .sha-abrir {
+      transition: none;
+    }
+  }
+</style>

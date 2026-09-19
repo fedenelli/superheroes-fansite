@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { SITE } from '../src/data/site';
 
 /**
  * Regressions specific to swapping the DOM instead of reloading the document:
@@ -136,3 +137,53 @@ test('the viewer is rebound once per visit, not stacked', async ({ page }) => {
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('[data-shv="numero"]')).toHaveText('2');
 });
+
+test('aportes lists each contribution and opens its photos in the viewer', async ({ page }) => {
+  // Arrive client-side, so the page's scripts are bound by astro:page-load.
+  await page.goto('/');
+  await page.click('.shh-link[href="/aportes"]');
+  await expect(page).toHaveURL(/aportes$/);
+  await expect(page.locator('.shh-link[aria-current="page"]')).toHaveText('Aportes');
+
+  await expect(page.locator('.sha-aporte')).toHaveCount(2);
+  await expect(page.locator('#villa-gesell')).toContainText('Guille J Murphy');
+
+  // Photos are numbered across the whole page, so the viewer runs through every aporte.
+  await page.locator('#villa-gesell a.shf-abrir').click();
+  await expect(page.locator('dialog.shv')).toBeVisible();
+  await expect(page.locator('[data-shv="numero"]')).toHaveText('3');
+});
+
+test('the aportes email is not in the HTML but works once the page loads', async ({ page, request }) => {
+  // Decoded here the same way correo.ts does it, so the address isn't in the repo either.
+  const direccion = [...atob(SITE.correo)].reverse().join('');
+  const [usuario, dominio] = direccion.split('@');
+
+  const html = await (await request.get('/aportes')).text();
+  expect(html).not.toContain(usuario);
+  expect(html).not.toContain(dominio);
+
+  await page.goto('/aportes');
+  const correo = page.locator('#enviar a.correo');
+  await expect(correo).toHaveText(direccion);
+  await expect(correo).toHaveAttribute('href', `mailto:${direccion}?subject=${encodeURIComponent('Aporte para superheroes.com.ar')}`);
+});
+
+for (const viewport of [{ width: 1280, height: 720 }, { width: 390, height: 780 }]) {
+  test(`the viewer fits a tall photo whole on screen at ${viewport.width}×${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    // The Power Music pages are portrait and taller than the screen at full size.
+    await page.goto('/aportes#foto-1');
+    const img = page.locator('dialog.shv [data-shv="img"]');
+    await expect(img).toHaveAttribute('src', (await page.locator('.shv-mini').first().getAttribute('data-grande'))!);
+
+    // object-fit letterboxes inside the element, so the element's box bounds the photo.
+    const caja = (await img.boundingBox())!;
+    const escenario = (await page.locator('[data-shv="escenario"]').boundingBox())!;
+    expect(caja.y).toBeGreaterThanOrEqual(escenario.y);
+    expect(caja.y + caja.height).toBeLessThanOrEqual(escenario.y + escenario.height + 1);
+    expect(caja.x).toBeGreaterThanOrEqual(0);
+    expect(caja.x + caja.width).toBeLessThanOrEqual(viewport.width + 1);
+    expect(await img.evaluate((el) => getComputedStyle(el).objectFit)).toBe('contain');
+  });
+}

@@ -1,0 +1,22 @@
+---
+/**
+ * A mailto link whose address never appears in the HTML. SITE.correo holds it
+ * reversed and base64-encoded, and src/scripts/correo.ts decodes it once the
+ * page loads — enough to keep it out of scrapers that only read the markup.
+ * Without JS the link just says so.
+ */
+import { SITE } from '../data/site';
+
+interface Props {
+  /** Subject line the mail client is opened with. */
+  asunto?: string;
+}
+
+const { asunto } = Astro.props;
+---
+
+<a class="correo" data-correo={SITE.correo} data-asunto={asunto} href="#" rel="nofollow">(activá JavaScript para ver el correo)</a>
+
+<script>
+  import '../scripts/correo';
+</script>
