@@ -2,15 +2,17 @@
 import Base from '../layouts/Base.astro';
 import Titulo from '../components/Titulo.astro';
 import { HOME_GRID } from '../data/pages';
+import { SITIO, BANDA, grafo } from '../data/seo';
 ---
 
 <Base
-  title="Superhéroes"
+  title="Superhéroes — Discos y rarezas (1993-2013)"
   description="Discos y rarezas de Superhéroes (1993-2013)"
   ogTitle="Superhéroes"
   path=""
   ogImage="fbprofile.png"
   twitterImage="twprofile.jpg"
+  jsonLd={grafo(SITIO, BANDA)}
   variant="home"
   overlayHeader
 >

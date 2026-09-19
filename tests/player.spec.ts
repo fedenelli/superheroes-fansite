@@ -41,7 +41,7 @@ test('audio survives client-side navigation to another release', async ({ page }
   // Navigate the way a visitor would: click the "next release" link.
   await page.click('a[href="/como-va-la-reserva"]');
   await expect(page).toHaveURL(/\/como-va-la-reserva$/);
-  await expect(page.locator('h2').first()).toHaveText('COMO VA LA RESERVA');
+  await expect(page.locator('h1.titulo')).toHaveText('COMO VA LA RESERVA');
 
   const after = await audioState(page);
   // Same DOM node — this is what transition:persist buys us.

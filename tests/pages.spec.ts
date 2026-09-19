@@ -79,7 +79,7 @@ test('release pages keep their own metadata after a client-side navigation', asy
   await page.goto('/');
   await page.click('a[href="/escolares"]');
   await expect(page).toHaveURL(/escolares$/);
-  await expect(page).toHaveTitle('Escolares — Superheroes');
+  await expect(page).toHaveTitle('Escolares — Superhéroes');
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
     'content',
     'https://www.superheroes.com.ar/escolares'
@@ -120,7 +120,7 @@ test.describe('on a phone', () => {
     await gracias.click();
     await expect(page).toHaveURL(/gracias$/);
     await expect(page.locator('.shh-toggle')).toHaveAttribute('aria-expanded', 'false');
-    await expect(page.locator('h2', { hasText: 'Gracias.' })).toBeVisible();
+    await expect(page.locator('.titulo', { hasText: 'Gracias.' })).toBeVisible();
   });
 });
 
@@ -187,3 +187,20 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 390, height: 780 
     expect(await img.evaluate((el) => getComputedStyle(el).objectFit)).toBe('contain');
   });
 }
+
+test('search engines get a sitemap, canonical URLs and structured data, and the 404 stays out', async ({ page, request }) => {
+  const sitemap = await (await request.get('/sitemap.xml')).text();
+  expect(sitemap).toContain('<loc>https://www.superheroes.com.ar/album-verde</loc>');
+  expect(sitemap).not.toContain('/404');
+  expect(await (await request.get('/robots.txt')).text()).toContain('Sitemap: https://www.superheroes.com.ar/sitemap.xml');
+
+  await page.goto('/album-verde');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://www.superheroes.com.ar/album-verde');
+  const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? '{}');
+  const disco = ld['@graph'].find((n: { '@type': string }) => n['@type'] === 'MusicAlbum');
+  expect(disco.track.numberOfItems).toBe(6);
+
+  await page.goto('/no-existe');
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+});

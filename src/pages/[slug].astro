@@ -4,6 +4,7 @@ import Titulo from '../components/Titulo.astro';
 import Tracklist from '../components/Tracklist.astro';
 import PlayKey from '../components/PlayKey.astro';
 import { RELEASES, type Release } from '../data/releases';
+import { BANDA, album, migas, grafo } from '../data/seo';
 
 interface Props {
   release: Release;
@@ -22,12 +23,14 @@ const links = [release.prev, release.next] as const;
 ---
 
 <Base
-  title={`${release.title} — Superheroes`}
+  title={`${release.title} — Superhéroes`}
   description={release.description}
   ogTitle={release.ogTitle}
   path={`/${release.slug}`}
   ogImage={release.ogImage}
   twitterImage={release.twitterImage}
+  ogType="music.album"
+  jsonLd={grafo(album(release), BANDA, migas([release.title, `/${release.slug}`]))}
   overlayHeader
 >
   <!-- =============== INICIO BREADCRUMB ================ -->
@@ -52,7 +55,7 @@ const links = [release.prev, release.next] as const;
   <!-- =============== INICIO ALBUM SINGLE ================ -->
   <section class="albumSingle padding background-properties">
     <div class="container">
-      <Titulo>{release.heading}</Titulo>
+      <Titulo as="h1">{release.heading}</Titulo>
 
       <Tracklist release={release} />
     </div>

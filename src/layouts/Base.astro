@@ -28,6 +28,12 @@ export interface Props {
   variant?: 'home' | 'inner';
   /** Header starts transparent over a full-bleed first section; see Header.astro. */
   overlayHeader?: boolean;
+  /** og:type — 'music.album' on release pages. */
+  ogType?: string;
+  /** Keeps the page out of search results; only the 404 uses it. */
+  noindex?: boolean;
+  /** schema.org objects printed as JSON-LD, so search engines know what the page is about. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const {
@@ -39,10 +45,15 @@ const {
   twitterImage,
   variant = 'inner',
   overlayHeader = false,
+  ogType = 'website',
+  noindex = false,
+  jsonLd,
 } = Astro.props;
 
 const isHome = variant === 'home';
-const canonical = `${SITE.origin}${path}`;
+const canonical = `${SITE.origin}${path || '/'}`;
+// `</` inside a string would close the <script> early.
+const ldJson = jsonLd && JSON.stringify(jsonLd).replace(/</g, '\\u003c');
 const cardUrl = (file: string) => `${SITE.origin}${file.startsWith('/') ? file : `/assets/og_img/${file}`}`;
 ---
 
@@ -51,10 +62,12 @@ const cardUrl = (file: string) => `${SITE.origin}${file.startsWith('/') ? file :
   <head>
     <meta charset="UTF-8" />
     <meta name="HandheldFriendly" content="true" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large'} />
+    {!noindex && <link rel="canonical" href={canonical} />}
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link rel="icon" href="/assets/img/content/icon.png" />
 
     <!-- ========== ESTILOS CSS ========== -->
@@ -71,11 +84,14 @@ const cardUrl = (file: string) => `${SITE.origin}${file.startsWith('/') ? file :
     <meta name="twitter:title" content={ogTitle} />
     <meta name="twitter:description" content={description} />
     {twitterImage && <meta name="twitter:image" content={cardUrl(twitterImage)} />}
-    <meta property="og:type" content="profile" />
+    <meta property="og:site_name" content={SITE.artist} />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:title" content={ogTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     {ogImage && <meta property="og:image" content={cardUrl(ogImage)} />}
+    {ldJson && <script is:inline type="application/ld+json" set:html={ldJson} />}
 
     <ClientRouter />
   </head>

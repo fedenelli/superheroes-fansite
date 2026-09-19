@@ -1,5 +1,10 @@
 ---
 /** A section title printed on label-maker tape; styles live in src/styles/papel.css. */
+interface Props {
+  /** h1 when the tape is the page's main heading; the look is identical either way. */
+  as?: 'h1' | 'h2';
+}
+const { as: Tag = 'h2' } = Astro.props;
 ---
 
-<h2 class="titulo"><span class="dymo"><slot /></span></h2>
+<Tag class="titulo"><span class="dymo"><slot /></span></Tag>
