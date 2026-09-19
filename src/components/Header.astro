@@ -1,0 +1,259 @@
+---
+import { RELEASES, releaseBySlug } from '../data/releases';
+
+export interface Props {
+  /** Path of the current page, as passed to Base ('' for the home page). */
+  path: string;
+  /** 'home' keeps the wider 4rem logo that / and /discografia always had. */
+  variant: 'home' | 'inner';
+  /**
+   * Start transparent over a full-bleed hero and turn solid once the page
+   * scrolls. Pages whose first section is white must leave this off.
+   */
+  overlay: boolean;
+}
+
+const { path, variant, overlay } = Astro.props;
+
+const LINKS = [
+  { href: '/#discos', label: 'Discos', match: (p: string) => releaseBySlug.has(p.slice(1)) },
+  { href: '/galeria-de-fotos', label: 'Fotos', match: (p: string) => p === '/galeria-de-fotos' },
+  { href: '/gracias', label: 'Gracias', match: (p: string) => p === '/gracias' },
+];
+
+const trackCount = RELEASES.reduce((n, r) => n + r.tracks.length, 0);
+---
+
+<!-- =============== INICIO TOP HEADER ================ -->
+<header class:list={['shh', { 'shh--overlay': overlay, 'shh--home': variant === 'home' }]}>
+  <a href="/" class="shh-logo">SUPERHEROES</a>
+
+  <button
+    type="button"
+    class="shh-toggle"
+    aria-expanded="false"
+    aria-controls="shh-nav"
+    aria-label="Abrir menú">
+    <span></span>
+    <span></span>
+  </button>
+
+  <nav id="shh-nav" class="shh-nav" aria-label="Principal">
+    <ul>
+      {
+        LINKS.map((link) => {
+          const active = link.match(path);
+          return (
+            <li>
+              <a
+                href={link.href}
+                class:list={['shh-link', { 'is-active': active }]}
+                aria-current={active ? (link.href === path ? 'page' : 'true') : undefined}>
+                {link.label}
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+    <p class="shh-meta">{RELEASES.length} discos · {trackCount} temas</p>
+  </nav>
+</header>
+<!-- =============== FIN TOP HEADER ================ -->
+
+<style>
+  .shh {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.6rem 5rem;
+  }
+
+  /*
+   * The background is two stacked layers faded by opacity: a gradient can't be
+   * transitioned, so swapping background-image would snap the scrim away.
+   */
+  .shh::before,
+  .shh::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+  /* Scrim that keeps white text readable over light photos. */
+  .shh::before {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+  }
+  .shh::after {
+    background: #000;
+    box-shadow: 0 1px 0 #222;
+  }
+  .shh--overlay:not(.is-solid)::after {
+    opacity: 0;
+  }
+
+  .shh-logo {
+    font-family: 'Conv_BebasNeue Regular', Helvetica, Arial, sans-serif;
+    font-weight: bold;
+    font-size: 3.5rem;
+    line-height: 1;
+    color: #fff;
+    text-decoration: none;
+  }
+  .shh--home .shh-logo {
+    font-size: 4rem;
+  }
+  .shh-logo:hover,
+  .shh-logo:focus {
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .shh-nav ul {
+    display: flex;
+    gap: 3.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shh-link {
+    display: block;
+    padding: 0.4rem 0 0.2rem;
+    border-bottom: 2px solid transparent;
+    font-family: 'Conv_BebasNeue Regular', Helvetica, Arial, sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .shh-link:hover,
+  .shh-link:focus {
+    color: #fff;
+    text-decoration: none;
+  }
+  .shh-link.is-active {
+    color: #fff;
+    border-bottom-color: #ff0080;
+  }
+
+  .shh-logo:focus-visible,
+  .shh-link:focus-visible,
+  .shh-toggle:focus-visible {
+    outline: 2px solid #fef60d;
+    outline-offset: 4px;
+  }
+
+  .shh-meta,
+  .shh-toggle {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .shh {
+      padding: 1.4rem 2rem;
+    }
+    /* Logo and toggle stay above the open menu. */
+    .shh-logo,
+    .shh--home .shh-logo {
+      position: relative;
+      z-index: 2;
+      font-size: 3.2rem;
+    }
+
+    .shh-toggle {
+      position: relative;
+      z-index: 2;
+      display: block;
+      width: 4.4rem;
+      height: 4.4rem;
+      margin-right: -1rem;
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: pointer;
+    }
+    .shh-toggle span {
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      height: 2px;
+      background: #fff;
+      transition: transform 0.2s ease;
+    }
+    .shh-toggle span:first-child {
+      top: 1.6rem;
+    }
+    .shh-toggle span:last-child {
+      top: 2.6rem;
+    }
+    .shh-toggle[aria-expanded='true'] span:first-child {
+      transform: translateY(0.5rem) rotate(45deg);
+    }
+    .shh-toggle[aria-expanded='true'] span:last-child {
+      transform: translateY(-0.5rem) rotate(-45deg);
+    }
+
+    /* Full-screen menu. Above the mini-player (z-index 1000) while it is open. */
+    .shh-nav {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 9rem 2rem 3rem;
+      background: #0d0d0d;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+    }
+    .shh.is-open {
+      z-index: 1100;
+    }
+    .shh.is-open .shh-nav {
+      visibility: visible;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+    .shh-nav ul {
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .shh-link {
+      display: inline-block;
+      font-size: 4.6rem;
+      letter-spacing: 0.02em;
+      color: #fff;
+    }
+    .shh-link.is-active {
+      color: #ff0080;
+      border-bottom-color: transparent;
+    }
+    .shh-meta {
+      display: block;
+      margin: auto 0 0;
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      font-size: 1.3rem;
+      color: #888;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shh,
+    .shh *,
+    .shh::before,
+    .shh::after {
+      transition: none !important;
+    }
+  }
+</style>

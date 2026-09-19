@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import Header from '../components/Header.astro';
 import Player from '../components/Player.astro';
 import { SITE } from '../data/site';
 
@@ -21,6 +22,8 @@ export interface Props {
    * other page uses today (3.5rem logo, 5/3/4 footer).
    */
   variant?: 'home' | 'inner';
+  /** Header starts transparent over a full-bleed first section; see Header.astro. */
+  overlayHeader?: boolean;
 }
 
 const {
@@ -31,13 +34,11 @@ const {
   ogImage,
   twitterImage,
   variant = 'inner',
+  overlayHeader = false,
 } = Astro.props;
 
 const isHome = variant === 'home';
 const canonical = `${SITE.origin}${path}`;
-const logoStyle = isHome
-  ? "font-family:'Conv_BebasNeue Regular', Helvetica, Arial, sans-serif; font-weight:bold; color:#FFF; font-size:4rem;"
-  : "font-family:'Conv_BebasNeue Regular'; font-weight:bold; color:#FFF; font-size:3.5rem;";
 ---
 
 <!DOCTYPE html>
@@ -101,53 +102,7 @@ const logoStyle = isHome
 
     <Player />
 
-    <!-- =============== INICIO TOP HEADER ================ -->
-    <div class="topHeader">
-      <div class="header">
-        <div class="rightTopHeader">
-          <!-- Open Menu Button -->
-          <a class="open-menu">
-            <span class="span-1"></span>
-            <span class="span-2"></span>
-            <span class="span-3"></span>
-          </a>
-        </div>
-      </div>
-      <!-- FIN header -->
-
-      <div class="menu-fixed-container">
-        <nav>
-          <div class="x-filter">
-            <span></span>
-            <span></span>
-          </div>
-          <div style="width:80%; max-width:600px; margin:auto; padding-top: 20px;">
-            <h3>Gracias.</h3>
-            <br />
-            <p style="text-align:justify; font-size:1.5rem; line-height:2rem;">
-              Superhéroes fue la banda que escuché durante mi adolescencia, que tal vez no sirvió
-              para desarrollar mi oído musical pero sí me hizo compartir grandes momentos con mis
-              amigos. Por eso le estoy agradecido, y por eso esta web me pareció una forma de
-              reconocerle algo a un grupo de personas que me regaló muchas horas de diversión.
-            </p>
-            <br />
-            <p style="text-align:justify; font-size:1.5rem; line-height:2rem;">
-              Ojalá lo disfruten tanto como yo.
-            </p>
-            <br />
-            <p style="text-align:right; font-weight:bold; font-size:1.5rem; line-height:2rem;">
-              Fede.
-            </p>
-          </div>
-        </nav>
-      </div>
-
-      <!-- =============== SUPERHEROES LOGO ================ -->
-      <div class="logo-container-top">
-        <a href="/" style="text-decoration:none;"><span style={logoStyle}>SUPERHEROES</span></a>
-      </div>
-    </div>
-    <!-- =============== FIN TOP HEADER ================ -->
+    <Header path={path} variant={variant} overlay={overlayHeader} />
 
     <slot />
 

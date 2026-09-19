@@ -37,14 +37,35 @@ function hideLoader(): void {
   }
 }
 
-function bindMenu(): void {
-  const toggle = () => {
-    document.querySelector('.open-menu')?.classList.toggle('active');
-    document.querySelector('.menu-fixed-container')?.classList.toggle('open');
-  };
-  document.querySelector('.open-menu')?.addEventListener('click', toggle);
-  document.querySelector('.x-filter')?.addEventListener('click', toggle);
+function setMenuOpen(open: boolean): void {
+  const header = document.querySelector('.shh');
+  const toggle = document.querySelector('.shh-toggle');
+  if (!header || !toggle) return;
+  header.classList.toggle('is-open', open);
+  toggle.setAttribute('aria-expanded', String(open));
+  toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+  document.body.style.overflow = open ? 'hidden' : '';
 }
+
+/** The header is swapped with the page, so its own listeners are rebound per navigation. */
+function bindMenu(): void {
+  document.querySelector('.shh-toggle')?.addEventListener('click', () => {
+    setMenuOpen(!document.querySelector('.shh')?.classList.contains('is-open'));
+  });
+  // A link to the page already showing (or to /#discos from /) does not navigate; close anyway.
+  document.querySelectorAll('.shh-link').forEach((link) => {
+    link.addEventListener('click', () => setMenuOpen(false));
+  });
+}
+
+/** Overlay headers stay transparent only while the hero is under them. */
+function updateHeader(): void {
+  document.querySelector('.shh')?.classList.toggle('is-solid', window.scrollY > 40);
+}
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') setMenuOpen(false);
+});
 
 function bindGoTop(): void {
   document.querySelector('.goTop')?.addEventListener('click', (event) => {
@@ -57,6 +78,7 @@ function bindGoTop(): void {
 window.addEventListener('scroll', () => {
   const goTop = document.querySelector<HTMLElement>('.goTop');
   if (goTop) goTop.style.bottom = window.scrollY > 300 ? '50px' : '-80px';
+  updateHeader();
 });
 
 window.addEventListener('resize', sizeFullscreenHero);
@@ -64,6 +86,7 @@ window.addEventListener('resize', sizeFullscreenHero);
 document.addEventListener('astro:page-load', () => {
   sizeFullscreenHero();
   hideLoader();
+  updateHeader();
   bindMenu();
   bindGoTop();
 
