@@ -2,50 +2,892 @@
 import { SITE } from '../data/site';
 
 /**
- * The footer player.
+ * The persistent player.
  *
  * Lives in Base.astro so it renders on every page, and is wrapped in
  * <sh-player transition:persist> so the ClientRouter keeps this exact DOM node
  * — and therefore the <audio> element and its playback position — across
  * navigations. The queue itself lives in src/scripts/player.ts, not in the DOM.
  *
- * Markup below reproduces the legacy .main-music-player verbatim; the only
- * change is <audio> replacing the jPlayer <div id="mesh-main-player">.
+ * Three views share the same state, all rendered by player.ts:
+ *  - .shp-bar    the bottom bar (full controls on desktop, a mini-player on phones)
+ *  - .shp-sheet  "now playing": a full-screen sheet on phones, the queue panel on desktop
+ *  - .shp-pip    the card that moves into the Document Picture-in-Picture window
+ *
+ * Controls are wired by [data-action]; text and artwork are filled by [data-bind].
+ * None of this uses the legacy mesh-* classes, so master.css never touches it.
  */
+
+const icon = {
+  play: 'M8 5.14v13.72a1 1 0 0 0 1.5.86l11.2-6.86a1 1 0 0 0 0-1.72L9.5 4.28A1 1 0 0 0 8 5.14Z',
+  pause: 'M6 4.5A1.5 1.5 0 0 1 7.5 3h2A1.5 1.5 0 0 1 11 4.5v15A1.5 1.5 0 0 1 9.5 21h-2A1.5 1.5 0 0 1 6 19.5v-15Zm7 0A1.5 1.5 0 0 1 14.5 3h2A1.5 1.5 0 0 1 18 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-2a1.5 1.5 0 0 1-1.5-1.5v-15Z',
+  prev: 'M5 4a1 1 0 0 1 1 1v5.7l11.5-6.6A1 1 0 0 1 19 5v14a1 1 0 0 1-1.5.87L6 13.3V19a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1Z',
+  next: 'M19 4a1 1 0 0 0-1 1v5.7L6.5 4.13A1 1 0 0 0 5 5v14a1 1 0 0 0 1.5.87L18 13.3V19a1 1 0 1 0 2 0V5a1 1 0 0 0-1-1Z',
+  shuffle: 'M16.3 3.3a1 1 0 0 1 1.4 0l3 3a1 1 0 0 1 0 1.4l-3 3a1 1 0 0 1-1.4-1.4L17.58 8H16a4 4 0 0 0-3.2 1.6l-4.4 5.87A6 6 0 0 1 3.6 18H3a1 1 0 1 1 0-2h.6a4 4 0 0 0 3.2-1.6l4.4-5.87A6 6 0 0 1 16 6h1.58l-1.29-1.3a1 1 0 0 1 0-1.4ZM3 6h.6a6 6 0 0 1 4.3 1.81 1 1 0 1 1-1.43 1.4A4 4 0 0 0 3.6 8H3a1 1 0 0 1 0-2Zm13.3 7.3a1 1 0 0 1 1.4 0l3 3a1 1 0 0 1 0 1.4l-3 3a1 1 0 0 1-1.4-1.4l1.28-1.3H16a6 6 0 0 1-4.3-1.81 1 1 0 1 1 1.43-1.4A4 4 0 0 0 16 16h1.58l-1.29-1.3a1 1 0 0 1 0-1.4Z',
+  repeat: 'M17.3 2.3a1 1 0 0 1 1.4 0l3 3a1 1 0 0 1 0 1.4l-3 3a1 1 0 0 1-1.4-1.4L18.58 7H7a3 3 0 0 0-3 3v1a1 1 0 1 1-2 0v-1a5 5 0 0 1 5-5h11.58L17.3 3.7a1 1 0 0 1 0-1.4ZM21 12a1 1 0 0 1 1 1v1a5 5 0 0 1-5 5H5.42l1.29 1.3a1 1 0 0 1-1.42 1.4l-3-3a1 1 0 0 1 0-1.4l3-3a1 1 0 0 1 1.42 1.4L5.42 17H17a3 3 0 0 0 3-3v-1a1 1 0 0 1 1-1Z',
+  volume: 'M11 4.5a1 1 0 0 0-1.6-.8L5.65 7H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h2.65l3.75 3.3A1 1 0 0 0 11 19.5v-15Zm4.54 3.46a1 1 0 0 1 1.41 0 5.73 5.73 0 0 1 0 8.08 1 1 0 0 1-1.41-1.41 3.73 3.73 0 0 0 0-5.26 1 1 0 0 1 0-1.41Zm2.83-2.83a1 1 0 0 1 1.41 0 9.73 9.73 0 0 1 0 13.74 1 1 0 0 1-1.41-1.41 7.73 7.73 0 0 0 0-10.92 1 1 0 0 1 0-1.41Z',
+  mute: 'M11 4.5a1 1 0 0 0-1.6-.8L5.65 7H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h2.65l3.75 3.3A1 1 0 0 0 11 19.5v-15Zm4.3 4.8a1 1 0 0 1 1.4 0l1.8 1.79 1.8-1.8a1 1 0 1 1 1.4 1.42L19.92 12.5l1.8 1.8a1 1 0 0 1-1.42 1.4l-1.8-1.79-1.79 1.8a1 1 0 0 1-1.42-1.42l1.8-1.79-1.8-1.8a1 1 0 0 1 0-1.4Z',
+  queue: 'M3 5a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1Zm0 5a1 1 0 0 1 1-1h10a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1Zm0 5a1 1 0 0 1 1-1h7a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1Zm13-2.5a1 1 0 0 1 1.5-.87l4 2.5a1 1 0 0 1 0 1.74l-4 2.5A1 1 0 0 1 16 17.5v-5Z',
+  pip: 'M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a1 1 0 1 1-2 0V5H5v14h5a1 1 0 1 1 0 2H5a2 2 0 0 1-2-2V5Zm10 9a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-6Z',
+  down: 'M4.3 8.3a1 1 0 0 1 1.4 0L12 14.58l6.3-6.3a1 1 0 1 1 1.4 1.42l-7 7a1 1 0 0 1-1.4 0l-7-7a1 1 0 0 1 0-1.4Z',
+  close: 'M5.3 5.3a1 1 0 0 1 1.4 0L12 10.58l5.3-5.3a1 1 0 1 1 1.4 1.42L13.42 12l5.3 5.3a1 1 0 0 1-1.42 1.4L12 13.42l-5.3 5.3a1 1 0 0 1-1.4-1.42L10.58 12l-5.3-5.3a1 1 0 0 1 0-1.4Z',
+};
 ---
 
-<sh-player transition:persist="player">
-  <div class="main-music-player hide-player">
-    <a class="hide-player-button">
-      <i class="fa fa-plus"></i>
-      <i class="fa fa-minus"></i>
-    </a>
+<sh-player transition:persist="player" data-empty>
+  <audio id="sh-audio" preload="none"></audio>
 
-    <audio id="sh-audio" preload="none"></audio>
+  <!-- =============== INICIO BARRA ================ -->
+  <div class="shp-bar" role="region" aria-label="Reproductor">
+    <div class="shp-now">
+      <button type="button" class="shp-cover-btn" data-action="expand" aria-label="Ver lo que suena">
+        <img class="shp-cover" data-bind="cover" src="/assets/img/albums/cover1.jpg" alt="" />
+      </button>
+      <div class="shp-meta">
+        <div class="shp-title" data-bind="title"></div>
+        <a class="shp-album" data-bind="album" href="/">{SITE.artist}</a>
+      </div>
+    </div>
 
-    <div id="mesh-main-player-content" class="mesh-main-player" role="application" aria-label="media player">
-      <div class="container">
-        <div class="row">
-          <div class="left-player-side">
-            <div class="mesh-prev"><i class="fa fa-step-backward"></i></div>
-            <div class="mesh-play"><i class="fa fa-play"></i></div>
-            <div class="mesh-pause"><i class="fa fa-pause"></i></div>
-            <div class="mesh-next"><i class="fa fa-step-forward"></i></div>
-          </div>
-          <div class="center-side">
-            <div class="mesh-current-time"></div>
-            <div class="mesh-seek-bar">
-              <div class="mesh-play-bar"></div>
-            </div>
-            <div class="mesh-duration"></div>
-          </div>
-          <div class="right-player-side">
-            <div class="mesh-thumbnail"><img src="/assets/img/albums/cover1.jpg" alt="" /></div>
-            <div class="mesh-title"></div>
-            <div class="mesh-artist">{SITE.artist}</div>
+    <div class="shp-center">
+      <div class="shp-controls">
+        <button type="button" class="shp-btn shp-toggle" data-action="shuffle" aria-label="Aleatorio" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.shuffle} /></svg>
+        </button>
+        <button type="button" class="shp-btn" data-action="prev" aria-label="Anterior">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.prev} /></svg>
+        </button>
+        <button type="button" class="shp-btn shp-play" data-action="toggle" aria-label="Reproducir">
+          <svg class="shp-i-play" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.play} /></svg>
+          <svg class="shp-i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.pause} /></svg>
+        </button>
+        <button type="button" class="shp-btn" data-action="next" aria-label="Siguiente">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.next} /></svg>
+        </button>
+        <button type="button" class="shp-btn shp-toggle shp-repeat" data-action="repeat" aria-label="Repetir" data-repeat="off">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.repeat} /></svg>
+          <span class="shp-repeat-one" aria-hidden="true">1</span>
+        </button>
+      </div>
+      <div class="shp-progress">
+        <span class="shp-time" data-bind="current">0:00</span>
+        <input class="shp-range" data-bind="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Posición" />
+        <span class="shp-time" data-bind="duration">0:00</span>
+      </div>
+    </div>
+
+    <div class="shp-extra">
+      <button type="button" class="shp-btn shp-toggle" data-action="queue" aria-label="Cola de reproducción" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.queue} /></svg>
+      </button>
+      <button type="button" class="shp-btn" data-action="pip" aria-label="Ventana flotante" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.pip} /></svg>
+      </button>
+      <button type="button" class="shp-btn" data-action="mute" aria-label="Silenciar">
+        <svg class="shp-i-volume" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.volume} /></svg>
+        <svg class="shp-i-mute" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.mute} /></svg>
+      </button>
+      <input class="shp-range shp-volume" data-bind="volume" type="range" min="0" max="100" step="1" value="100" aria-label="Volumen" />
+    </div>
+
+    <!-- Solo en mobile: play/pausa del mini reproductor y su barra de progreso -->
+    <button type="button" class="shp-btn shp-mini-play" data-action="toggle" aria-label="Reproducir">
+      <svg class="shp-i-play" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.play} /></svg>
+      <svg class="shp-i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.pause} /></svg>
+    </button>
+    <div class="shp-mini-progress" aria-hidden="true"><span data-bind="bar"></span></div>
+  </div>
+  <!-- =============== FIN BARRA ================ -->
+
+  <!-- =============== INICIO REPRODUCIENDO ================ -->
+  <div class="shp-sheet" role="dialog" aria-label="Reproduciendo" aria-hidden="true">
+    <div class="shp-sheet-head">
+      <button type="button" class="shp-btn" data-action="collapse" aria-label="Cerrar">
+        <svg class="shp-i-down" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.down} /></svg>
+        <svg class="shp-i-close" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.close} /></svg>
+      </button>
+      <div class="shp-sheet-from">
+        <small>Reproduciendo desde</small>
+        <strong data-bind="album-text"></strong>
+      </div>
+      <button type="button" class="shp-btn" data-action="pip" aria-label="Ventana flotante" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.pip} /></svg>
+      </button>
+    </div>
+
+    <div class="shp-sheet-body">
+      <img class="shp-sheet-cover" data-bind="art" src="/assets/img/albums/cover1.jpg" alt="" />
+      <div class="shp-sheet-meta">
+        <div class="shp-title" data-bind="title"></div>
+        <a class="shp-album" data-bind="album" href="/">{SITE.artist}</a>
+      </div>
+
+      <div class="shp-sheet-transport">
+        <div class="shp-progress">
+          <input class="shp-range" data-bind="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Posición" />
+          <div class="shp-times">
+            <span class="shp-time" data-bind="current">0:00</span>
+            <span class="shp-time" data-bind="duration">0:00</span>
           </div>
         </div>
+        <div class="shp-controls">
+          <button type="button" class="shp-btn shp-toggle" data-action="shuffle" aria-label="Aleatorio" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.shuffle} /></svg>
+          </button>
+          <button type="button" class="shp-btn" data-action="prev" aria-label="Anterior">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.prev} /></svg>
+          </button>
+          <button type="button" class="shp-btn shp-play" data-action="toggle" aria-label="Reproducir">
+            <svg class="shp-i-play" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.play} /></svg>
+            <svg class="shp-i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.pause} /></svg>
+          </button>
+          <button type="button" class="shp-btn" data-action="next" aria-label="Siguiente">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.next} /></svg>
+          </button>
+          <button type="button" class="shp-btn shp-toggle shp-repeat" data-action="repeat" aria-label="Repetir" data-repeat="off">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.repeat} /></svg>
+            <span class="shp-repeat-one" aria-hidden="true">1</span>
+          </button>
+        </div>
+      </div>
+
+      <h3 class="shp-queue-title">Cola de reproducción</h3>
+      <ol class="shp-queue" data-bind="queue"></ol>
+    </div>
+  </div>
+  <!-- =============== FIN REPRODUCIENDO ================ -->
+
+  <!-- =============== INICIO VENTANA FLOTANTE ================ -->
+  <div class="shp-pip" hidden>
+    <img class="shp-pip-cover" data-bind="art" src="/assets/img/albums/cover1.jpg" alt="" />
+    <div class="shp-pip-panel">
+      <div class="shp-pip-meta">
+        <div class="shp-title" data-bind="title"></div>
+        <div class="shp-album-text" data-bind="album-text"></div>
+      </div>
+      <input class="shp-range" data-bind="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Posición" />
+      <div class="shp-controls">
+        <button type="button" class="shp-btn" data-action="prev" aria-label="Anterior">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.prev} /></svg>
+        </button>
+        <button type="button" class="shp-btn shp-play" data-action="toggle" aria-label="Reproducir">
+          <svg class="shp-i-play" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.play} /></svg>
+          <svg class="shp-i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d={icon.pause} /></svg>
+        </button>
+        <button type="button" class="shp-btn" data-action="next" aria-label="Siguiente">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.next} /></svg>
+        </button>
       </div>
     </div>
   </div>
+  <!-- =============== FIN VENTANA FLOTANTE ================ -->
 </sh-player>
+
+<style is:global>
+  /*
+   * Global on purpose: the PiP card is moved into another document, and these
+   * rules are copied over with it. Everything is namespaced under sh-player /
+   * .shp-* so nothing leaks into the legacy theme.
+   */
+  sh-player {
+    --shp-bg: #121212;
+    --shp-bar: #181818;
+    --shp-fg: #fff;
+    --shp-dim: #b3b3b3;
+    --shp-faint: #4d4d4d;
+    --shp-accent: #f5c518;
+    --shp-tint: #2a2a2a;
+    --shp-bar-h: 5.6rem;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 1.4rem;
+    line-height: 1.3;
+    color: var(--shp-fg);
+    -webkit-tap-highlight-color: transparent;
+  }
+  sh-player[data-empty] {
+    display: none;
+  }
+
+  /* Keep the footer out from under the bar, and the page still under the sheet. */
+  body:has(sh-player:not([data-empty])) {
+    padding-bottom: calc(var(--shp-bar-h, 5.6rem) + 1.6rem + env(safe-area-inset-bottom));
+  }
+  html:has(sh-player[data-expanded]) {
+    overflow: hidden;
+  }
+  @media (min-width: 768px) {
+    body:has(sh-player:not([data-empty])) {
+      padding-bottom: 9rem;
+    }
+    html:has(sh-player[data-expanded]) {
+      overflow: auto;
+    }
+  }
+
+  sh-player button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+  sh-player a {
+    color: inherit;
+    text-decoration: none;
+  }
+  sh-player a:hover {
+    text-decoration: underline;
+  }
+  sh-player [hidden] {
+    display: none !important;
+  }
+
+  .shp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 50%;
+    color: var(--shp-dim);
+    position: relative;
+    transition: color 0.15s, transform 0.1s;
+  }
+  .shp-btn:hover {
+    color: var(--shp-fg);
+  }
+  .shp-btn:active {
+    transform: scale(0.94);
+  }
+  .shp-btn svg {
+    width: 1.8rem;
+    height: 1.8rem;
+    fill: currentColor;
+  }
+  .shp-btn:focus-visible,
+  .shp-range:focus-visible,
+  .shp-cover-btn:focus-visible {
+    outline: 2px solid var(--shp-fg);
+    outline-offset: 2px;
+  }
+  .shp-toggle[aria-pressed='true'],
+  .shp-repeat:not([data-repeat='off']) {
+    color: var(--shp-accent);
+  }
+  .shp-toggle[aria-pressed='true']::after,
+  .shp-repeat:not([data-repeat='off'])::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .shp-repeat-one {
+    display: none;
+    position: absolute;
+    top: 0.3rem;
+    right: 0.2rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.6rem;
+    background: var(--shp-accent);
+    color: #000;
+  }
+  .shp-repeat[data-repeat='one'] .shp-repeat-one {
+    display: block;
+  }
+
+  .shp-play {
+    background: var(--shp-fg) !important;
+    color: #000 !important;
+  }
+  .shp-play:hover {
+    transform: scale(1.05);
+  }
+  .shp-i-pause,
+  sh-player[data-playing] .shp-i-play,
+  .shp-pip[data-playing] .shp-i-play {
+    display: none;
+  }
+  sh-player[data-playing] .shp-i-pause,
+  .shp-pip[data-playing] .shp-i-pause {
+    display: block;
+  }
+  .shp-i-mute,
+  sh-player[data-muted] .shp-i-volume {
+    display: none;
+  }
+  sh-player[data-muted] .shp-i-mute {
+    display: block;
+  }
+
+  .shp-title {
+    font-weight: 600;
+    color: var(--shp-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .shp-album,
+  .shp-album-text {
+    display: block;
+    color: var(--shp-dim);
+    font-size: 0.86em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .shp-time {
+    font-size: 1.1rem;
+    color: var(--shp-dim);
+    font-variant-numeric: tabular-nums;
+    min-width: 3.6rem;
+  }
+
+  /* ---------- Range inputs: thin track, fill via --pct, thumb on hover ---------- */
+  .shp-range {
+    --pct: 0%;
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    width: 100%;
+    height: 1.6rem;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    touch-action: none;
+  }
+  .shp-range::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--shp-fg) var(--pct), var(--shp-faint) var(--pct));
+  }
+  .shp-range::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--shp-fg) var(--pct), var(--shp-faint) var(--pct));
+  }
+  .shp-range:hover::-webkit-slider-runnable-track {
+    background: linear-gradient(to right, var(--shp-accent) var(--pct), var(--shp-faint) var(--pct));
+  }
+  .shp-range:hover::-moz-range-track {
+    background: linear-gradient(to right, var(--shp-accent) var(--pct), var(--shp-faint) var(--pct));
+  }
+  .shp-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-top: -4px;
+    border-radius: 50%;
+    border: 0;
+    background: var(--shp-fg);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .shp-range::-moz-range-thumb {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    border: 0;
+    background: var(--shp-fg);
+    opacity: 0;
+  }
+  .shp-range:hover::-webkit-slider-thumb,
+  .shp-range:focus-visible::-webkit-slider-thumb,
+  .shp-range:active::-webkit-slider-thumb {
+    opacity: 1;
+  }
+  .shp-range:hover::-moz-range-thumb,
+  .shp-range:focus-visible::-moz-range-thumb,
+  .shp-range:active::-moz-range-thumb {
+    opacity: 1;
+  }
+
+  /* =============== Barra: desktop =============== */
+  .shp-bar {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 9rem;
+    padding: 0 1.6rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 1.6rem;
+    background: #000;
+    border-top: 1px solid #282828;
+  }
+  .shp-now {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    min-width: 0;
+  }
+  .shp-cover-btn {
+    flex: none;
+    border-radius: 0.4rem;
+    overflow: hidden;
+  }
+  .shp-cover {
+    display: block;
+    width: 5.6rem;
+    height: 5.6rem;
+    object-fit: cover;
+    background: var(--shp-tint);
+  }
+  .shp-meta {
+    min-width: 0;
+  }
+  .shp-bar .shp-title {
+    font-size: 1.7rem;
+  }
+  .shp-bar .shp-album {
+    font-size: 1.3rem;
+  }
+  .shp-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: 72rem;
+    width: 100%;
+    justify-self: center;
+  }
+  .shp-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+  }
+  .shp-bar .shp-play {
+    width: 3.4rem;
+    height: 3.4rem;
+  }
+  .shp-bar .shp-play svg {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+  .shp-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    width: 100%;
+  }
+  .shp-bar .shp-time:first-child {
+    text-align: right;
+  }
+  .shp-extra {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.4rem;
+  }
+  .shp-volume {
+    flex: 0 1 9.6rem;
+  }
+  .shp-mini-play,
+  .shp-mini-progress {
+    display: none !important;
+  }
+
+  /* =============== Barra: mobile (mini reproductor) =============== */
+  @media (max-width: 767px) {
+    .shp-bar {
+      left: 0.8rem;
+      right: 0.8rem;
+      bottom: calc(0.8rem + env(safe-area-inset-bottom));
+      height: var(--shp-bar-h);
+      padding: 0 0.8rem;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.8rem;
+      border: 0;
+      border-radius: 0.8rem;
+      overflow: hidden;
+      background: var(--shp-tint);
+      box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.4);
+      transition: background-color 0.4s;
+    }
+    .shp-center,
+    .shp-extra {
+      display: none;
+    }
+    .shp-cover {
+      width: 4rem;
+      height: 4rem;
+    }
+    .shp-meta {
+      flex: 1;
+      cursor: pointer;
+    }
+    .shp-bar .shp-album {
+      pointer-events: none;
+    }
+    .shp-mini-play {
+      display: inline-flex !important;
+      width: 4.4rem;
+      height: 4.4rem;
+      color: var(--shp-fg);
+    }
+    .shp-mini-play svg {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+    .shp-mini-progress {
+      display: block !important;
+      position: absolute;
+      left: 0.8rem;
+      right: 0.8rem;
+      bottom: 0;
+      height: 2px;
+      border-radius: 1px;
+      background: rgba(255, 255, 255, 0.25);
+      overflow: hidden;
+    }
+    .shp-mini-progress span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--shp-fg);
+    }
+  }
+
+  /* =============== Reproduciendo: mobile, pantalla completa =============== */
+  .shp-sheet {
+    position: fixed;
+    z-index: 1001;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(to bottom, var(--shp-tint) 0%, var(--shp-bg) 70%);
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0.3s;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  sh-player[data-expanded] .shp-sheet {
+    transform: translateY(0);
+    visibility: visible;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s;
+  }
+  .shp-sheet.shp-dragging {
+    transition: none;
+  }
+  .shp-sheet-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1.2rem 1.6rem;
+  }
+  .shp-sheet-head .shp-btn {
+    color: var(--shp-fg);
+    width: 4rem;
+    height: 4rem;
+  }
+  .shp-sheet-head .shp-btn svg {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+  .shp-i-close {
+    display: none;
+  }
+  .shp-sheet-from {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+  }
+  .shp-sheet-from small {
+    display: block;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--shp-dim);
+  }
+  .shp-sheet-from strong {
+    display: block;
+    font-size: 1.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .shp-sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.8rem 2.4rem 3.2rem;
+  }
+  .shp-sheet-cover {
+    display: block;
+    width: 100%;
+    max-width: 44rem;
+    aspect-ratio: 1;
+    object-fit: cover;
+    margin: 0.8rem auto 2.4rem;
+    border-radius: 0.8rem;
+    box-shadow: 0 1.6rem 4rem rgba(0, 0, 0, 0.5);
+  }
+  .shp-sheet-meta {
+    max-width: 44rem;
+    margin: 0 auto 1.6rem;
+  }
+  .shp-sheet-meta .shp-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+  }
+  .shp-sheet-meta .shp-album {
+    font-size: 1.5rem;
+  }
+  .shp-sheet-transport {
+    max-width: 44rem;
+    margin: 0 auto;
+  }
+  .shp-sheet .shp-progress {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  .shp-sheet .shp-range {
+    height: 2.4rem;
+  }
+  .shp-sheet .shp-range::-webkit-slider-thumb {
+    opacity: 1;
+  }
+  .shp-sheet .shp-range::-moz-range-thumb {
+    opacity: 1;
+  }
+  .shp-times {
+    display: flex;
+    justify-content: space-between;
+  }
+  .shp-sheet .shp-controls {
+    justify-content: space-between;
+    margin: 0.8rem 0 3.2rem;
+  }
+  .shp-sheet .shp-controls .shp-btn {
+    width: 4.8rem;
+    height: 4.8rem;
+    color: var(--shp-fg);
+  }
+  .shp-sheet .shp-controls .shp-btn svg {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+  .shp-sheet .shp-controls .shp-toggle svg {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+  .shp-sheet .shp-controls .shp-toggle[aria-pressed='true'],
+  .shp-sheet .shp-controls .shp-repeat:not([data-repeat='off']) {
+    color: var(--shp-accent);
+  }
+  .shp-sheet .shp-controls .shp-play {
+    width: 6.4rem;
+    height: 6.4rem;
+  }
+  .shp-sheet .shp-controls .shp-play svg {
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+
+  .shp-queue-title {
+    max-width: 44rem;
+    margin: 0 auto 0.8rem;
+    font: inherit;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--shp-fg);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .shp-queue {
+    list-style: none;
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 0;
+  }
+  .shp-queue li {
+    margin: 0;
+  }
+  .shp-queue button {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 0.4rem;
+    text-align: left;
+  }
+  .shp-queue button:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .shp-queue .shp-q-n {
+    flex: none;
+    width: 2.4rem;
+    text-align: right;
+    color: var(--shp-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .shp-queue .shp-q-title {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .shp-queue .shp-q-time {
+    flex: none;
+    color: var(--shp-dim);
+    font-size: 1.2rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .shp-queue [aria-current='true'] .shp-q-title,
+  .shp-queue [aria-current='true'] .shp-q-n {
+    color: var(--shp-accent);
+    font-weight: 600;
+  }
+  .shp-queue button:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+
+  /* =============== Reproduciendo: desktop, panel lateral con la cola =============== */
+  @media (min-width: 768px) {
+    .shp-sheet {
+      inset: auto 0.8rem 9.8rem auto;
+      top: 0.8rem;
+      width: 36rem;
+      border-radius: 0.8rem;
+      box-shadow: 0 1.6rem 4.8rem rgba(0, 0, 0, 0.5);
+      transform: translateX(calc(100% + 1.6rem));
+      padding: 0;
+      overflow: hidden;
+    }
+    sh-player[data-expanded] .shp-sheet {
+      transform: translateX(0);
+    }
+    .shp-i-down {
+      display: none;
+    }
+    .shp-i-close {
+      display: block;
+    }
+    .shp-sheet-head .shp-btn {
+      color: var(--shp-dim);
+    }
+    .shp-sheet-head .shp-btn:hover {
+      color: var(--shp-fg);
+    }
+    .shp-sheet-head [data-action='pip'] {
+      display: none !important;
+    }
+    .shp-sheet-from {
+      text-align: left;
+      order: -1;
+    }
+    .shp-sheet-body {
+      padding: 0 1.6rem 1.6rem;
+    }
+    .shp-sheet-cover {
+      margin: 0 0 1.6rem;
+    }
+    .shp-sheet-meta .shp-title {
+      font-size: 2rem;
+    }
+    .shp-sheet-transport {
+      display: none;
+    }
+  }
+
+  /* =============== Ventana flotante (Document Picture-in-Picture) =============== */
+  .shp-pip {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background: var(--shp-bg);
+    color: var(--shp-fg);
+    overflow: hidden;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.3;
+    --shp-bg: #121212;
+    --shp-fg: #fff;
+    --shp-dim: #b3b3b3;
+    --shp-faint: rgba(255, 255, 255, 0.3);
+    --shp-accent: #f5c518;
+  }
+  .shp-pip-cover {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .shp-pip-panel {
+    position: relative;
+    padding: 48px 16px 12px;
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.85) 45%);
+  }
+  .shp-pip-meta {
+    margin-bottom: 4px;
+  }
+  .shp-pip .shp-title {
+    font-size: 16px;
+  }
+  .shp-pip .shp-album-text {
+    font-size: 13px;
+  }
+  .shp-pip .shp-range {
+    height: 16px;
+  }
+  .shp-pip .shp-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  .shp-pip .shp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--shp-fg);
+    cursor: pointer;
+  }
+  .shp-pip .shp-btn svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+  }
+  .shp-pip .shp-play {
+    width: 44px;
+    height: 44px;
+  }
+  .shp-pip .shp-play svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shp-sheet,
+    sh-player[data-expanded] .shp-sheet {
+      transition: none;
+    }
+  }
+</style>
