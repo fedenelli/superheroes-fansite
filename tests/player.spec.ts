@@ -55,6 +55,23 @@ test('audio survives client-side navigation to another release', async ({ page }
     .toBeGreaterThan(before!.t);
 });
 
+test('the play key on the cover starts the album and then pauses it', async ({ page }) => {
+  await page.goto('/album-verde');
+  const key = page.locator('[data-play-album]');
+  await expect(key).toBeInViewport();
+  await expect(key).toHaveAccessibleName('Escuchar Album Verde');
+
+  await key.click();
+  await expect.poll(async () => (await audioState(page))?.paused).toBe(false);
+  expect((await audioState(page))?.src).toContain('/audio/album-verde/01.mp3');
+  await expect(key).toHaveAccessibleName('Pausar Album Verde');
+  await expect(page.locator('.trak-item').first()).toHaveClass(/active/);
+
+  await key.click();
+  await expect.poll(async () => (await audioState(page))?.paused).toBe(true);
+  await expect(key).toHaveAccessibleName('Escuchar Album Verde');
+});
+
 test('the queue outlives the page it came from', async ({ page }) => {
   await page.goto('/album-verde');
   await playTrack(page, 0);

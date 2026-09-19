@@ -65,6 +65,8 @@ public/assets/           css, fonts, img, og_img, galleries — served verbatim
 
 **The player UI is self-contained.** `Player.astro` renders three views over the same state — the bottom bar (a mini-player below 768px), the "now playing" sheet (full screen on phones, queue panel on desktop) and a `.shp-pip` card that `player.ts` moves into a Document Picture-in-Picture window. Its styles are `is:global` and namespaced `.shp-*` on purpose: they get copied into the PiP document, and they must not use the legacy `mesh-*` classes that `master.css` still styles. Controls are wired per element via `[data-action]` (not delegated on `<sh-player>`), because the PiP card leaves that subtree. Big artwork uses each release's `heroImage`; the `cover` files are only 30×30.
 
+**The release hero's "Escuchar" card** (`src/components/PlayKey.astro`) is a copy of the phone mini-player, placed over the full-screen cover so there is something to press. `player.ts` binds it via `[data-play-album]`, tints it with the same `tintOf(cover)` as the mini-player and hides it on phones once its album is queued, because the mini-player below would show the same card twice. Its look is duplicated from the `.shp-bar` mobile styles by hand; keep the two in step.
+
 **Audio lives on DigitalOcean Spaces**, not in the repo. Track durations are baked into `releases.ts` at build time; the page renders them statically instead of shipping a hidden `<audio preload="metadata">` per track. `npm run durations -- <file.json>` re-probes via ffprobe.
 
 ## Known broken content

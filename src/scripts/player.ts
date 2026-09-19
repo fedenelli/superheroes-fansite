@@ -262,12 +262,26 @@ function renderTrackList(): void {
   if (isPlaying()) row.classList.add('playing');
 }
 
+/** The hero's play card shows pause while its own release is playing. */
+function renderPlayKey(): void {
+  const key = $<HTMLElement>('[data-play-album]');
+  const list = $<HTMLElement>('[data-release]');
+  if (!key || !list) return;
+  const queued = state.queue?.slug === list.dataset.release && state.index >= 0;
+  const on = queued && isPlaying();
+  key.classList.toggle('is-queued', queued);
+  key.classList.toggle('is-playing', on);
+  const album = list.dataset.album ?? '';
+  key.setAttribute('aria-label', on ? `Pausar ${album}` : `Escuchar ${album}`);
+}
+
 function render(): void {
   renderTransport();
   renderNowPlaying();
   renderQueue();
   renderProgress();
   renderTrackList();
+  renderPlayKey();
   renderMediaSession();
 }
 
@@ -276,7 +290,7 @@ function render(): void {
  * so white text stays legible — the effect Spotify gets from its artwork.
  */
 const tints = new Map<string, string>();
-async function applyTint(src: string): Promise<void> {
+async function tintOf(src: string): Promise<string | null> {
   let tint = tints.get(src);
   if (!tint) {
     try {
@@ -286,17 +300,22 @@ async function applyTint(src: string): Promise<void> {
       const canvas = document.createElement('canvas');
       canvas.width = canvas.height = 1;
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      if (!ctx) return;
+      if (!ctx) return null;
       ctx.drawImage(img, 0, 0, 1, 1);
       const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
       const k = 0.5;
       tint = `rgb(${Math.round(r * k)}, ${Math.round(g * k)}, ${Math.round(b * k)})`;
       tints.set(src, tint);
     } catch {
-      return;
+      return null;
     }
   }
-  if (lastCover !== src) return;
+  return tint;
+}
+
+async function applyTint(src: string): Promise<void> {
+  const tint = await tintOf(src);
+  if (!tint || lastCover !== src) return;
   root?.style.setProperty('--shp-tint', tint);
   pipCard?.style.setProperty('--shp-bg', tint);
 }
@@ -370,7 +389,7 @@ function wireMediaSession(): void {
 // ---------------------------------------------------------------------------
 
 /** What made a track start, so autoplay can be told apart from a chosen song. */
-type Trigger = 'tracklist' | 'queue' | 'next' | 'previous' | 'auto' | 'repeat' | 'resume';
+type Trigger = 'tracklist' | 'album' | 'queue' | 'next' | 'previous' | 'auto' | 'repeat' | 'resume';
 
 /** Set when a track is loaded or restarted; the next `playing` event reports it. */
 let pendingStart: Trigger | null = null;
@@ -488,7 +507,7 @@ function seek(seconds: number): void {
 }
 
 /** Called when a row is clicked. Starts a queue, or toggles if it's the same track. */
-function selectTrack(queue: Queue, index: number): void {
+function selectTrack(queue: Queue, index: number, via: Trigger = 'tracklist'): void {
   const sameTrack =
     state.queue?.slug === queue.slug && state.index === index && audio?.src === queue.tracks[index].url;
 
@@ -500,7 +519,17 @@ function selectTrack(queue: Queue, index: number): void {
   state.queue = queue;
   state.index = index;
   if (newQueue || state.shuffle) rebuildOrder();
-  play(index, 'tracklist');
+  play(index, via);
+}
+
+/** The hero's PLAY key: start the album from the top, or pause/resume it if it's already queued. */
+function playAlbum(queue: Queue): void {
+  if (state.queue?.slug === queue.slug && state.index >= 0) {
+    togglePlay();
+    return;
+  }
+  const first = queue.tracks.findIndex((t) => t.duration !== null);
+  if (first >= 0) selectTrack(queue, first, 'album');
 }
 
 function toggleShuffle(): void {
@@ -812,6 +841,12 @@ function bindPage(): void {
       selectTrack(queue, index);
     });
   });
+  const key = $<HTMLElement>('[data-play-album]');
+  if (key) {
+    key.addEventListener('click', () => playAlbum(queue));
+    // The same tint the mini-player will take on once this album plays.
+    void tintOf(queue.cover).then((tint) => tint && key.style.setProperty('--shk-tint', tint));
+  }
 
   render();
 }
