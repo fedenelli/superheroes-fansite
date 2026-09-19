@@ -55,16 +55,6 @@ public/assets/           css, fonts, img, og_img, galleries — served verbatim
 
 **Audio lives on DigitalOcean Spaces**, not in the repo. Track durations are baked into `releases.ts` at build time; the page renders them statically instead of shipping a hidden `<audio preload="metadata">` per track. `npm run durations -- <file.json>` re-probes via ffprobe.
 
-## Known upstream quirks, preserved on purpose
-
-The migration kept the original rendering exactly, including several oddities. Fixing any of them is a one-line data change, but do it deliberately:
-
-- Seven release pages use `pagination-next` on **both** footer tiles, so their "Anterior" tile renders right-aligned. Only `album-verde` and `como-va-la-reserva` use `pagination-previous`. Carried in `PageLink.linkClass`.
-- `rock-and-pop-en-vivo` labels its *next* tile "Anterior".
-- `fm-patricios-en-vivo`'s meta description is copy-pasted from the Rock & Pop page.
-- `/galeria-de-fotos` has no `og:image` or `twitter:image`, so its share card has no image.
-- Several pages word `twitter:title`/`twitter:description` differently from `og:title`/`description`; `Base.astro` takes both.
-
 ## Known broken content
 
 `viejas-porquerias` track 21, "La bicicleta de Saturno (en vivo)", is 5.2 MB of zero bytes on DigitalOcean — a corrupt upload. It returns 200 but cannot decode, so it has `duration: null` and will not play. Needs re-uploading from the source MP3; nothing in this repo can fix it.

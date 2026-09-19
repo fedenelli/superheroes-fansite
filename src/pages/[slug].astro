@@ -32,8 +32,6 @@ const links = [release.prev, release.next] as const;
   title={`${release.title} — Superheroes`}
   description={release.description}
   ogTitle={release.ogTitle}
-  twitterTitle={release.twitterTitle}
-  twitterDescription={release.twitterDescription}
   path={`/${release.slug}`}
   ogImage={release.ogImage}
   twitterImage={release.twitterImage}
@@ -123,8 +121,8 @@ const links = [release.prev, release.next] as const;
             <div
               class={`col-sm-6 ${i === 0 ? 'leftHover' : 'rightHover'}`}
               style={`background-image: url('${link.image}');`}>
-              <a href={link.href} class={link.linkClass}>
-                <small>{link.kicker}</small>
+              <a href={link.href} class={i === 0 ? 'pagination-previous' : 'pagination-next'}>
+                <small>{i === 0 ? 'Anterior' : 'Siguiente'}</small>
                 <span>{link.label}</span>
               </a>
             </div>

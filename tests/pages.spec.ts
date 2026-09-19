@@ -12,7 +12,8 @@ test('juicebox galleries initialise on a client-side navigation', async ({ page 
   await page.click('a[href="/galeria-de-fotos"]');
   await expect(page).toHaveURL(/galeria-de-fotos$/);
 
-  const containers = page.locator('.juicebox-gallery');
+  // Only the page's own containers: Juicebox nests another .juicebox-gallery inside each once it boots.
+  const containers = page.locator('.juicebox-gallery[data-config]');
   await expect(containers).toHaveCount(3);
 
   // Juicebox replaces the container's contents once it boots.
