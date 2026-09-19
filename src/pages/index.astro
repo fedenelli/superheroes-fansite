@@ -1,0 +1,92 @@
+---
+import Base from '../layouts/Base.astro';
+import { HOME_GRID } from '../data/pages';
+---
+
+<Base
+  title="Superhéroes"
+  description="Discos y rarezas de Superhéroes (1993-2013)"
+  ogTitle="Superhéroes"
+  twitterDescription="Sitio web no oficial de Superhéroes."
+  path=""
+  ogImage="fbprofile.png"
+  twitterImage="twprofile.jpg"
+  variant="home"
+>
+  <!-- =============== INICIO BREADCRUMB ================ -->
+  <section
+    class="padding background-properties"
+    style="background-image: url('/assets/img/starHomePage/sh.jpg'); background-size:cover; height:100vh;">
+    <div class="twitter" style="display:inline-flex;height:100%;width:100%;">
+      <div class="container" style="margin:auto 10%; width:100%">
+        <div class="row">
+          <div class="col-sm-12">
+            <h1
+              style="font-family:'Conv_BebasNeue Regular', Helvetica Neue, Helvetica, Arial, sans-serif; font-weight:bold; font-stretch:extra-condensed; color:#fff; font-size:10rem;">
+              SUPER<wbr />HEROES
+            </h1>
+            <h2 style="font-family:'Conv_BebasNeue Regular', sans-serif; color:#fff;">
+              Un homenaje a la mejor peor banda de la historia.
+            </h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- =============== FIN BREADCRUMB ================ -->
+
+  <!-- =============== INICIO ALBUM COVER SECTION ================ -->
+  <section class="padding albumsHome">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="sectionTitle paddingBottom">
+            <span class="heading-t3"></span>
+            <h2>Discografía</h2>
+            <span class="heading-b3"></span>
+          </div>
+        </div>
+      </div>
+
+      {
+        HOME_GRID.map((row, i) => (
+          <div class="list-albums" style={i === 0 ? undefined : 'padding-top:4rem;'}>
+            <ul class="list-feature col-md-12 col-xs-12 col-sm-12">
+              {row.map((tile) => (
+                <li class="col-md-3 col-sm-3 col-xs-12">
+                  <div class={tile.iconClass ? `album-icon ${tile.iconClass}` : 'album-icon'}>
+                    <span class="thumbs-album">
+                      <a href={tile.href}>
+                        <img
+                          width="270"
+                          height="270"
+                          src={tile.img}
+                          class="attachment-album-thumbnail wp-post-image"
+                          alt={tile.label}
+                        />
+                      </a>
+                    </span>
+                    <span class="disk" />
+                  </div>
+                  <div class="name">
+                    <h3>{tile.label}</h3>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+
+      <div class="clearfix paddingBottom"></div>
+      <div class="row">
+        <div class="col-sm-12">
+          <a href="/galeria-de-fotos">
+            <img src="/assets/img/content/banner_fotos.png" alt="Galería de Fotos" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- =============== FIN ALBUM COVER SECTION ================ -->
+</Base>

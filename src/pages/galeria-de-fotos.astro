@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+import { GALLERIES } from '../data/pages';
+---
+
+<Base
+  title="Fotos — Superheroes"
+  description="Fotos de Superhéroes en vivo en The Roxy el 8 de julio de 2007"
+  ogTitle="Superhéroes - Galería de Fotos"
+  twitterDescription="Fotos de Superhéroes en vivo"
+  path="/galeria-de-fotos"
+>
+  <!-- =============== INICIO GALERIAS ================ -->
+  <section class="albumSingle background-properties" style="padding:7rem;">
+    <div class="container">
+      {
+        GALLERIES.map((gallery) => (
+          <>
+            <div class="sectionTitle" style="padding-bottom:3%;">
+              <span class="heading-t3" />
+              <h2>{gallery.heading}</h2>
+              <span class="heading-b3" />
+            </div>
+            <div class="row paddingBottom">
+              <div class="col-sm-12">
+                <div
+                  id={gallery.containerId}
+                  class="juicebox-gallery"
+                  data-config={gallery.configUrl}
+                  style="margin: auto;"
+                />
+              </div>
+            </div>
+          </>
+        ))
+      }
+    </div>
+  </section>
+  <!-- =============== FIN GALERIAS ================ -->
+
+  <script>
+    import '../scripts/galleries';
+  </script>
+</Base>

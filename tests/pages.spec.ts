@@ -1,0 +1,55 @@
+import { test, expect } from '@playwright/test';
+
+/**
+ * Regressions specific to swapping the DOM instead of reloading the document:
+ * anything that used to run because a <script> tag was parsed now has to be
+ * driven from `astro:page-load`.
+ */
+
+test('juicebox galleries initialise on a client-side navigation', async ({ page }) => {
+  // Arrive via the home page, so the gallery page is swapped in rather than loaded.
+  await page.goto('/');
+  await page.click('a[href="/galeria-de-fotos"]');
+  await expect(page).toHaveURL(/galeria-de-fotos$/);
+
+  const containers = page.locator('.juicebox-gallery');
+  await expect(containers).toHaveCount(3);
+
+  // Juicebox replaces the container's contents once it boots.
+  for (let i = 0; i < 3; i++) {
+    await expect
+      .poll(async () => (await containers.nth(i).innerHTML()).length, {
+        message: `gallery ${i + 1} should be populated`,
+        timeout: 20_000,
+      })
+      .toBeGreaterThan(0);
+  }
+  await expect(containers.first()).toHaveAttribute('data-jb-init', 'true');
+});
+
+test('every navigation is announced to GTM', async ({ page }) => {
+  await page.goto('/');
+  await page.click('a[href="/album-verde"]');
+  await expect(page).toHaveURL(/album-verde$/);
+  await page.click('a[href="/como-va-la-reserva"]');
+  await expect(page).toHaveURL(/como-va-la-reserva$/);
+
+  const paths = await page.evaluate(() =>
+    ((window as unknown as { dataLayer?: Record<string, unknown>[] }).dataLayer ?? [])
+      .filter((e) => e.event === 'astro_page_view')
+      .map((e) => e.page_path)
+  );
+  // Initial load plus the two client-side navigations.
+  expect(paths).toEqual(['/', '/album-verde', '/como-va-la-reserva']);
+});
+
+test('release pages keep their own metadata after a client-side navigation', async ({ page }) => {
+  await page.goto('/');
+  await page.click('a[href="/escolares"]');
+  await expect(page).toHaveURL(/escolares$/);
+  await expect(page).toHaveTitle('Escolares — Superheroes');
+  await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+    'content',
+    'https://www.superheroes.com.ar/escolares'
+  );
+});

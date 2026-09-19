@@ -1,0 +1,144 @@
+---
+import Base from '../layouts/Base.astro';
+import { RELEASES, type Release } from '../data/releases';
+
+interface Props {
+  release: Release;
+}
+
+export function getStaticPaths() {
+  return RELEASES.map((release): { params: { slug: string }; props: Props } => ({
+    params: { slug: release.slug },
+    props: { release },
+  }));
+}
+
+const { release } = Astro.props as Props;
+
+/** mm:ss — the value the build probed, or a placeholder the client fills in. */
+function formatTime(seconds: number | null): string {
+  if (seconds === null) return '00:00';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+const links = [release.prev, release.next] as const;
+---
+
+<Base
+  title={`${release.title} — Superheroes`}
+  description={release.description}
+  ogTitle={release.ogTitle}
+  twitterTitle={release.twitterTitle}
+  twitterDescription={release.twitterDescription}
+  path={`/${release.slug}`}
+  ogImage={release.ogImage}
+  twitterImage={release.twitterImage}
+>
+  <!-- =============== INICIO BREADCRUMB ================ -->
+  <section class="no-mb">
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="before-FullscreenSlider"></div>
+        <div class="breadcrumb-fullscreen-parent phone-menu-bg">
+          <div
+            class="breadcrumb breadcrumb-fullscreen alignleft small-description overlay almost-black-overlay"
+            style={`background-image: url('${release.heroImage}');`}
+            data-stellar-background-ratio="0.5"
+            data-stellar-vertical-offset="0">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- =============== FIN BREADCRUMB ================ -->
+
+  <!-- =============== INICIO ALBUM SINGLE ================ -->
+  <section class="albumSingle padding background-properties">
+    <div class="container">
+      <div class="sectionTitle paddingBottom">
+        <span class="heading-t3"></span>
+        <h2>{release.heading}</h2>
+        <span class="heading-b3"></span>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-8">
+          <div class="jp-playlist" data-release={release.slug} data-cover={release.cover}>
+            <div class="about-list clearfix">
+              <span class="about-name">TEMA</span>
+              <span class="about-length">DURACIÓN</span>
+            </div>
+
+            {
+              release.tracks.map((track) => (
+                <div class="trak-item">
+                  <div class="play-pause-button">
+                    <div class="center-y-table">
+                      <i class="fa fa-play" />
+                    </div>
+                  </div>
+                  <div class="name-artist">
+                    <div class="center-y-table">
+                      <h2>{track.title}</h2>
+                    </div>
+                  </div>
+                  <time class="trak-duration">{formatTime(track.duration)}</time>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="col-sm-3 col-sm-offset-1">
+          <div class="sidebarAlbum">
+            <div class="widget">
+              <h3>Descargar en MP3</h3>
+              <section>
+                <ul id="services">
+                  <li>
+                    <a href={release.downloadUrl} target="_blank">
+                      <div><i class="fa fa-cloud-download" aria-hidden="true"></i></div>
+                    </a>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- =============== FIN ALBUM SINGLE ================ -->
+
+  <!-- =============== INICIO PAGINATION ================ -->
+  <div class="section-block  bkg-grey-ultralight pagination-2">
+    <div class="row full-width ">
+      {
+        links.map((link, i) =>
+          link ? (
+            <div
+              class={`col-sm-6 ${i === 0 ? 'leftHover' : 'rightHover'}`}
+              style={`background-image: url('${link.image}');`}>
+              <a href={link.href} class={link.linkClass}>
+                <small>{link.kicker}</small>
+                <span>{link.label}</span>
+              </a>
+            </div>
+          ) : null
+        )
+      }
+    </div>
+  </div>
+  <!-- =============== FIN PAGINATION ================ -->
+
+  <script
+    id="sh-tracks"
+    type="application/json"
+    is:inline
+    set:html={JSON.stringify(release.tracks)}
+  />
+</Base>

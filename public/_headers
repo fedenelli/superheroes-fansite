@@ -1,0 +1,40 @@
+# Replaces the ExpiresByType block from the old .htaccess.
+#
+# NOTE: when several rules match one request, Workers CONCATENATES their values
+# rather than letting the more specific one win — a `/*` catch-all plus
+# per-directory overrides yields `max-age=3600, ..., max-age=31536000` and the
+# first value wins, silently breaking long-lived asset caching. So every rule
+# here is non-overlapping.
+#
+# HTML is deliberately absent: pages are served extensionless (/album-verde),
+# which no useful pattern matches without also catching /assets. They fall back
+# to the Workers default of `max-age=0, must-revalidate` + ETag, which is the
+# behaviour we want anyway — the edge still caches, revalidation is a cheap 304,
+# and a deploy goes live immediately instead of being stale for up to an hour
+# the way the old `text/html "access 1 hour"` rule allowed.
+
+# Fingerprinted by Astro, so safe to pin forever.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Stable paths that only change if the file itself is replaced.
+/assets/img/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/og_img/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/loader/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Gallery photos never change; the XML configs occasionally do, but they are
+# matched by this same rule, so keep the TTL moderate.
+/assets/galleries/*
+  Cache-Control: public, max-age=86400
+
+# Not fingerprinted — revalidate so a redeploy is picked up promptly.
+/assets/css/*
+  Cache-Control: public, max-age=3600, must-revalidate

@@ -1,0 +1,51 @@
+---
+import { SITE } from '../data/site';
+
+/**
+ * The footer player.
+ *
+ * Lives in Base.astro so it renders on every page, and is wrapped in
+ * <sh-player transition:persist> so the ClientRouter keeps this exact DOM node
+ * — and therefore the <audio> element and its playback position — across
+ * navigations. The queue itself lives in src/scripts/player.ts, not in the DOM.
+ *
+ * Markup below reproduces the legacy .main-music-player verbatim; the only
+ * change is <audio> replacing the jPlayer <div id="mesh-main-player">.
+ */
+---
+
+<sh-player transition:persist="player">
+  <div class="main-music-player hide-player">
+    <a class="hide-player-button">
+      <i class="fa fa-plus"></i>
+      <i class="fa fa-minus"></i>
+    </a>
+
+    <audio id="sh-audio" preload="none"></audio>
+
+    <div id="mesh-main-player-content" class="mesh-main-player" role="application" aria-label="media player">
+      <div class="container">
+        <div class="row">
+          <div class="left-player-side">
+            <div class="mesh-prev"><i class="fa fa-step-backward"></i></div>
+            <div class="mesh-play"><i class="fa fa-play"></i></div>
+            <div class="mesh-pause"><i class="fa fa-pause"></i></div>
+            <div class="mesh-next"><i class="fa fa-step-forward"></i></div>
+          </div>
+          <div class="center-side">
+            <div class="mesh-current-time"></div>
+            <div class="mesh-seek-bar">
+              <div class="mesh-play-bar"></div>
+            </div>
+            <div class="mesh-duration"></div>
+          </div>
+          <div class="right-player-side">
+            <div class="mesh-thumbnail"><img src="/assets/img/albums/cover1.jpg" alt="" /></div>
+            <div class="mesh-title"></div>
+            <div class="mesh-artist">{SITE.artist}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</sh-player>
