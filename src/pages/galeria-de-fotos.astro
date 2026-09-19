@@ -1,42 +1,172 @@
 ---
+import { getImage } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Titulo from '../components/Titulo.astro';
-import { GALLERIES } from '../data/pages';
+import { SESIONES, sesionHref, fechaCorta } from '../data/fotos';
+
+/**
+ * Each session is a little pile of prints: its cover on top and the next two
+ * photos peeking out underneath, cropped to the same 4:3 print.
+ */
+const pilas = await Promise.all(
+  SESIONES.map(async (sesion) => {
+    const debajo = sesion.fotos.filter((f) => f !== sesion.portadaFoto).slice(0, 2);
+    const copias = await Promise.all(
+      [sesion.portadaFoto, ...debajo].map((f) =>
+        getImage({ src: f.image, width: 720, height: 540, fit: 'cover', format: 'webp', quality: 75 })
+      )
+    );
+    return { sesion, copias: copias.map((c) => c.src) };
+  })
+);
+const total = SESIONES.reduce((n, s) => n + s.fotos.length, 0);
 ---
 
 <Base
   title="Fotos — Superheroes"
-  description="Fotos de Superhéroes en vivo en The Roxy el 8 de julio de 2007"
+  description={`Fotos de Superhéroes en vivo: ${SESIONES.map((s) => `${s.lugar} (${fechaCorta(s.fecha)})`).join(', ')}.`}
   ogTitle="Superhéroes - Galería de Fotos"
   path="/galeria-de-fotos"
   ogImage="fbprofile.png"
   twitterImage="twprofile.jpg"
 >
-  <!-- =============== INICIO GALERIAS ================ -->
-  <section class="albumSingle background-properties" style="padding:12rem 7rem 7rem;">
+  <!-- =============== INICIO SESIONES ================ -->
+  <section class="albumSingle padding background-properties">
     <div class="container">
-      {
-        GALLERIES.map((gallery) => (
-          <>
-            <Titulo>{gallery.heading}</Titulo>
-            <div class="row paddingBottom">
-              <div class="col-sm-12">
-                <div
-                  id={gallery.containerId}
-                  class="juicebox-gallery"
-                  data-config={gallery.configUrl}
-                  style="margin: auto;"
-                />
-              </div>
-            </div>
-          </>
-        ))
-      }
+      <Titulo>Fotos</Titulo>
+      <p class="titulo-bajada">{SESIONES.length} sesiones · {total} fotos</p>
+
+      <ul class="shf-sesiones">
+        {
+          pilas.map(({ sesion, copias }) => (
+            <li>
+              <a href={sesionHref(sesion)} class="shf-sesion">
+                <span class="shf-pila" aria-hidden="true">
+                  {copias
+                    .slice(1)
+                    .reverse()
+                    .map((src) => (
+                      <img class="shf-copia shf-copia--debajo" src={src} alt="" width="720" height="540" loading="lazy" decoding="async" />
+                    ))}
+                  <img class="shf-copia" src={copias[0]} alt="" width="720" height="540" loading="lazy" decoding="async" />
+                  <span class="shf-cinta" />
+                </span>
+                <span class="shf-rotulo">
+                  <span class="dymo">{sesion.lugar}</span>
+                  <span class="shf-dato">
+                    {fechaCorta(sesion.fecha)} · {sesion.fotos.length} fotos
+                  </span>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </section>
-  <!-- =============== FIN GALERIAS ================ -->
-
-  <script>
-    import '../scripts/galleries';
-  </script>
+  <!-- =============== FIN SESIONES ================ -->
 </Base>
+
+<style is:global>
+  .shf-sesiones {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr));
+    gap: 7rem 5rem;
+    margin: 0 auto;
+    padding: 0 1rem;
+    max-width: 104rem;
+    list-style: none;
+  }
+
+  html body a.shf-sesion {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* ---- the pile of prints ---- */
+  .shf-pila {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+  }
+  .shf-copia {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* White print border. */
+    border: 0.9rem solid #fbfaf6;
+    border-bottom-width: 2.6rem;
+    background: #ddd;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    transform: rotate(var(--giro, 0deg));
+    transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1.2), box-shadow 0.35s;
+  }
+  .shf-copia--debajo {
+    filter: saturate(0.6) brightness(0.92);
+  }
+  .shf-copia--debajo:nth-child(1) { --giro: 5deg; }
+  .shf-copia--debajo:nth-child(2) { --giro: -3.5deg; }
+  .shf-copia:not(.shf-copia--debajo) { --giro: 0.8deg; }
+  .shf-sesiones li:nth-child(even) .shf-copia:not(.shf-copia--debajo) { --giro: -1.2deg; }
+
+  .shf-cinta {
+    position: absolute;
+    top: -1.2rem;
+    left: 50%;
+    width: 8rem;
+    height: 2.4rem;
+    background: rgba(236, 226, 190, 0.82);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    transform: translateX(-50%) rotate(-4deg);
+  }
+
+  /* Hovering fans the pile out a little. */
+  .shf-sesion:hover .shf-copia--debajo:nth-child(1),
+  .shf-sesion:focus-visible .shf-copia--debajo:nth-child(1) {
+    transform: translate(1.6rem, -0.6rem) rotate(9deg);
+  }
+  .shf-sesion:hover .shf-copia--debajo:nth-child(2),
+  .shf-sesion:focus-visible .shf-copia--debajo:nth-child(2) {
+    transform: translate(-1.6rem, -0.4rem) rotate(-8deg);
+  }
+  .shf-sesion:hover .shf-copia:not(.shf-copia--debajo),
+  .shf-sesion:focus-visible .shf-copia:not(.shf-copia--debajo) {
+    transform: translateY(-0.6rem) rotate(0deg);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+  }
+  .shf-sesion:focus-visible {
+    outline: none;
+  }
+  .shf-sesion:focus-visible .shf-rotulo .dymo {
+    outline: 3px solid #111;
+    outline-offset: 4px;
+  }
+
+  /* ---- label ---- */
+  .shf-rotulo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2.8rem;
+    text-align: center;
+  }
+  .shf-rotulo .dymo {
+    font-size: 1.8rem;
+    transform: rotate(-1deg);
+  }
+  .shf-dato {
+    font: 400 1.4rem/1.4 var(--dymo-font);
+    letter-spacing: 0.08em;
+    color: #333;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shf-copia {
+      transition: none;
+    }
+  }
+</style>

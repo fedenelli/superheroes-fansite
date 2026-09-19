@@ -26,7 +26,7 @@ Audio must keep playing while the visitor navigates. Two pieces make that work, 
 
 The old implementation did the opposite — current track was `.trak-item.active`, next track was that element's next sibling, play state lived in `data-state` attributes — which is exactly why leaving an album page killed playback. **Never reintroduce DOM-sibling traversal for queue logic.**
 
-Because content is swapped rather than reloaded, anything that used to run just by having a `<script>` tag parsed must now be driven from `astro:page-load`: tracklist bindings, Juicebox init (`src/scripts/galleries.ts`), GTM pageviews and the chrome handlers in `src/scripts/ui.ts`. Listeners on `window` or on the persisted player are bound **once**; listeners on swapped-in page content are rebound per navigation.
+Because content is swapped rather than reloaded, anything that used to run just by having a `<script>` tag parsed must now be driven from `astro:page-load`: tracklist bindings, the photo viewer (`src/scripts/visor.ts`), GTM pageviews and the chrome handlers in `src/scripts/ui.ts`. Listeners on `window` or on the persisted player are bound **once**; listeners on swapped-in page content are rebound per navigation.
 
 **Analytics.** `player.ts` pushes `album_start`, `audio_start`, `audio_progress` (25/50/75) and `audio_complete` to `dataLayer`, each with the full set of `audio_*` keys (GTM merges pushes, so an omitted key would keep a stale value). A start is reported on the `playing` event, not on click, so a file that fails to decode is never counted. The GTM container (GTM-N3SK6W) is configured outside this repo: these events reach GA4 only if it has a trigger and a GA4 event tag for them.
 
@@ -36,13 +36,15 @@ Because content is swapped rather than reloaded, anything that used to run just 
 src/pages/[slug].astro   the 9 release pages, from RELEASES
 src/pages/index.astro    hero + 10-tile grid + photos banner
 src/pages/discografia.astro    4 Bandcamp panels, no audio
-src/pages/galeria-de-fotos.astro   3 Juicebox galleries
+src/pages/galeria-de-fotos.astro   index of photo sessions
+src/pages/galeria-de-fotos/[sesion].astro   one session: contact sheet + <Visor/>
 src/pages/gracias.astro  the dedication note (used to be the hamburger overlay)
 src/layouts/Base.astro   head/meta, GTM, <Header/>, footer, <Player/>, ClientRouter
 src/components/Header.astro   top bar: logo + Discos/Fotos/Gracias (/discografia is reached from the home grid)
 src/data/releases.ts     the dataset — 9 releases, 125 tracks
-src/data/pages.ts        home grid, studio albums, gallery configs
-public/assets/           css, fonts, img, og_img, galleries — served verbatim
+src/data/pages.ts        home grid, studio albums
+src/data/fotos.ts        photo sessions; photos live in src/assets/fotos/<slug>/
+public/assets/           css, fonts, img, og_img — served verbatim
 ```
 
 `Base.astro` takes a `variant`: `'home'` reproduces the wider chrome that `/` and `/discografia` use (4rem logo, 4/4/4 footer, centred social icons); everything else uses `'inner'` (3.5rem logo, 5/3/4 footer). That difference is in the original design, not an accident.
@@ -68,6 +70,8 @@ public/assets/           css, fonts, img, og_img, galleries — served verbatim
 **The release hero's "Escuchar" card** (`src/components/PlayKey.astro`) is a copy of the phone mini-player, placed over the full-screen cover so there is something to press. `player.ts` binds it via `[data-play-album]`, tints it with the same `tintOf(cover)` as the mini-player and hides it on phones once its album is queued, because the mini-player below would show the same card twice. Its look is duplicated from the `.shp-bar` mobile styles by hand; keep the two in step.
 
 **Audio lives on DigitalOcean Spaces**, not in the repo. Track durations are baked into `releases.ts` at build time; the page renders them statically instead of shipping a hidden `<audio preload="metadata">` per track. `npm run durations -- <file.json>` re-probes via ffprobe.
+
+**Photos go through Astro's image pipeline, not `public/`.** A session is a folder `src/assets/fotos/<slug>/` (the slug is the URL) plus an entry in `src/data/fotos.ts`; photos are globbed from the folder in filename order and resized at build time (thumbnails, a capped viewer copy, the original for "ver original"). The build throws if a folder and an entry don't match. The viewer (`Visor.astro` + `visor.ts`) is a native `<dialog>` with no dependencies; its filmstrip buttons carry each photo's URLs, and the open photo is mirrored in `#foto-n` via `replaceState(history.state, …)` — passing `null` would wipe the ClientRouter's state and break back navigation.
 
 ## Known broken content
 
