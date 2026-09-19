@@ -242,6 +242,30 @@ test('plays are reported to GTM with the track and the release', async ({ page }
   expect((await events()).filter((e) => e.event === 'album_start')).toHaveLength(1);
 });
 
+test('leaving and coming back brings the player back where it was, paused', async ({ page }) => {
+  await page.goto('/album-verde');
+  await playTrack(page, 1);
+  await page.click('.shp-bar [data-action="repeat"]');
+  await page.evaluate(() => {
+    (document.querySelector('#sh-audio') as HTMLAudioElement).currentTime = 60;
+  });
+  await expect.poll(async () => Math.floor((await audioState(page))!.t)).toBeGreaterThanOrEqual(60);
+
+  // A full page load, as when the visitor closes the tab and returns later.
+  await page.goto('/');
+  await expect(page.locator('.shp-bar')).toBeVisible();
+  await expect(page.locator('.shp-bar [data-bind="title"]')).toHaveText('Golosinas');
+  await expect(page.locator('.shp-bar [data-action="repeat"]')).toHaveAttribute('data-repeat', 'all');
+  const restored = await audioState(page);
+  expect(restored?.paused).toBe(true);
+  expect(restored?.src).toContain('/audio/album-verde/02.mp3');
+  await expect.poll(async () => Math.floor((await audioState(page))!.t)).toBeGreaterThanOrEqual(60);
+
+  await page.click('.shp-bar [data-action="toggle"]');
+  await expect.poll(async () => (await audioState(page))?.paused).toBe(false);
+  expect((await audioState(page))!.t).toBeGreaterThanOrEqual(60);
+});
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 

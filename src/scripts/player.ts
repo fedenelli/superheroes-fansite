@@ -60,6 +60,13 @@ let wired = false;
 
 const MOBILE = '(max-width: 767px)';
 const VOLUME_KEY = 'sh-player-volume';
+const SESSION_KEY = 'sh-player-session';
+
+/**
+ * Where a restored track should resume. Held here until the file's metadata
+ * arrives, because until then the <audio> can't seek and reports 0.
+ */
+let restoreAt: number | null = null;
 
 const $ = <T extends Element>(sel: string) => document.querySelector<T>(sel);
 
@@ -89,6 +96,11 @@ function current(): Track | null {
 
 function isPlaying(): boolean {
   return Boolean(audio && !audio.paused);
+}
+
+/** The playhead, including a restored position the <audio> hasn't seeked to yet. */
+function position(): number {
+  return restoreAt ?? audio?.currentTime ?? 0;
 }
 
 /** Prefer what the browser measured; fall back to the build-time value. */
@@ -168,14 +180,14 @@ function renderTransport(): void {
 function renderProgress(): void {
   if (!audio) return;
   const duration = knownDuration();
-  const pct = duration ? Math.min(audio.currentTime / duration, 1) * 100 : 0;
+  const pct = duration ? Math.min(position() / duration, 1) * 100 : 0;
 
   if (!scrubbing) {
     binds<HTMLInputElement>('seek').forEach((input) => {
       input.value = String(Math.round(pct * 10));
       input.style.setProperty('--pct', `${pct}%`);
     });
-    binds('current').forEach((el) => (el.textContent = formatTime(audio!.currentTime)));
+    binds('current').forEach((el) => (el.textContent = formatTime(position())));
   }
   binds('bar').forEach((el) => (el.style.width = `${pct}%`));
 }
@@ -283,6 +295,7 @@ function render(): void {
   renderTrackList();
   renderPlayKey();
   renderMediaSession();
+  saveSession();
 }
 
 /**
@@ -423,7 +436,10 @@ function pushAudioEvent(event: string, percent?: number): void {
 
 function reportStart(): void {
   if (!pendingStart || !state.queue) return;
-  listen = { trigger: pendingStart, reported: new Set() };
+  // A resumed track counts only the milestones still ahead of it.
+  const duration = knownDuration();
+  const pct = audio && duration ? (audio.currentTime / duration) * 100 : 0;
+  listen = { trigger: pendingStart, reported: new Set(MILESTONES.filter((m) => pct >= m)) };
   pendingStart = null;
   if (state.queue.slug !== lastAlbum) {
     lastAlbum = state.queue.slug;
@@ -461,6 +477,7 @@ function play(index: number, via: Trigger = 'resume'): void {
   if (state.index !== index || audio.src !== track.url) {
     state.index = index;
     audio.src = track.url;
+    restoreAt = null;
     pendingStart = via;
     listen = null;
   } else if (audio.ended) {
@@ -489,7 +506,7 @@ function step(delta: number): void {
 
 /** Like every music app: "previous" restarts the song unless it has barely begun. */
 function previous(): void {
-  if (audio && audio.currentTime > 3) {
+  if (audio && position() > 3) {
     seek(0);
     return;
   }
@@ -501,8 +518,11 @@ function previous(): void {
 function seek(seconds: number): void {
   const duration = knownDuration();
   if (!audio || !duration) return;
-  audio.currentTime = Math.min(Math.max(seconds, 0), duration);
+  const target = Math.min(Math.max(seconds, 0), duration);
+  if (restoreAt !== null) restoreAt = target;
+  else audio.currentTime = target;
   renderProgress();
+  saveSession();
   updatePositionState();
 }
 
@@ -578,6 +598,80 @@ function restoreVolume(): void {
   } catch {
     /* ignore */
   }
+}
+
+// ---------------------------------------------------------------------------
+// Session: the queue and playhead survive closing the tab
+// ---------------------------------------------------------------------------
+
+interface Session {
+  queue: Queue;
+  index: number;
+  order: number[];
+  shuffle: boolean;
+  repeat: Repeat;
+  time: number;
+}
+
+let lastSave = 0;
+
+/** Snapshot the queue and playhead, so a later visit picks up where this one left off. */
+function saveSession(): void {
+  if (!audio) return;
+  lastSave = Date.now();
+  try {
+    if (!state.queue || state.index < 0) {
+      localStorage.removeItem(SESSION_KEY);
+      return;
+    }
+    const session: Session = {
+      queue: state.queue,
+      index: state.index,
+      order: state.order,
+      shuffle: state.shuffle,
+      repeat: state.repeat,
+      // A finished track comes back from the top, not parked on its last second.
+      time: audio.ended ? 0 : position(),
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  } catch {
+    /* private mode or blocked storage: the session just won't be remembered */
+  }
+}
+
+/**
+ * Put the last visit's track back in the player, paused at the same second.
+ * It never autoplays: browsers would refuse anyway, and sound out of nowhere
+ * on page load is the last thing a visitor wants.
+ */
+function restoreSession(): void {
+  if (!audio) return;
+  let session: Session;
+  try {
+    session = JSON.parse(localStorage.getItem(SESSION_KEY) ?? 'null');
+  } catch {
+    return;
+  }
+  const tracks = session?.queue?.tracks;
+  const track = Array.isArray(tracks) ? tracks[session.index] : undefined;
+  if (!track?.url || track.duration === null) return;
+
+  state.queue = session.queue;
+  state.index = session.index;
+  state.shuffle = session.shuffle === true;
+  state.repeat = session.repeat === 'all' || session.repeat === 'one' ? session.repeat : 'off';
+  const order = session.order;
+  const valid =
+    Array.isArray(order) && order.length === tracks.length && [...order].sort((a, b) => a - b).every((n, i) => n === i);
+  if (valid) state.order = order;
+  else rebuildOrder();
+
+  const time = Number(session.time);
+  restoreAt = Number.isFinite(time) && time > 0 && time < (track.duration ?? Infinity) - 1 ? time : null;
+  audio.preload = 'metadata';
+  audio.src = track.url;
+  // Pressing play resumes this track: report it as a start, like any other.
+  pendingStart = 'resume';
 }
 
 // ---------------------------------------------------------------------------
@@ -783,15 +877,23 @@ function wirePersistentPlayer(): void {
   audio.addEventListener('timeupdate', () => {
     renderProgress();
     reportProgress();
+    if (Date.now() - lastSave > 5000) saveSession();
   });
   audio.addEventListener('playing', reportStart);
   audio.addEventListener('loadedmetadata', () => {
+    if (audio && restoreAt !== null) {
+      audio.currentTime = restoreAt;
+      restoreAt = null;
+    }
     renderNowPlaying();
     updatePositionState();
   });
   audio.addEventListener('play', render);
   audio.addEventListener('pause', render);
-  audio.addEventListener('seeked', updatePositionState);
+  audio.addEventListener('seeked', () => {
+    updatePositionState();
+    saveSession();
+  });
   audio.addEventListener('volumechange', renderVolume);
   audio.addEventListener('ended', () => {
     if (!audio) return;
@@ -807,8 +909,15 @@ function wirePersistentPlayer(): void {
     else render();
   });
 
+  // The last write has to land before the tab goes; timeupdate only saves every few seconds.
+  window.addEventListener('pagehide', saveSession);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveSession();
+  });
+
   restoreVolume();
   renderVolume();
+  restoreSession();
   wireMediaSession();
 }
 
