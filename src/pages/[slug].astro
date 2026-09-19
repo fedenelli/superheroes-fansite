@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Titulo from '../components/Titulo.astro';
 import Tracklist from '../components/Tracklist.astro';
 import { RELEASES, type Release } from '../data/releases';
 
@@ -28,12 +29,6 @@ const links = [release.prev, release.next] as const;
   twitterImage={release.twitterImage}
   overlayHeader
 >
-  <link
-    slot="head"
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap"
-  />
-
   <!-- =============== INICIO BREADCRUMB ================ -->
   <section class="no-mb">
     <div class="row">
@@ -55,11 +50,7 @@ const links = [release.prev, release.next] as const;
   <!-- =============== INICIO ALBUM SINGLE ================ -->
   <section class="albumSingle padding background-properties">
     <div class="container">
-      <div class="sectionTitle paddingBottom">
-        <span class="heading-t3"></span>
-        <h2>{release.heading}</h2>
-        <span class="heading-b3"></span>
-      </div>
+      <Titulo>{release.heading}</Titulo>
 
       <Tracklist release={release} />
     </div>

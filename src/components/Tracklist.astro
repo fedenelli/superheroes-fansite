@@ -67,7 +67,7 @@ const count = release.tracks.length;
         sides.map((side) => (
           <>
             <div class="shz-side">
-              <span class="shz-dymo">Lado {side.label}</span>
+              <span class="dymo">Lado {side.label}</span>
               <span class="shz-side-len">{formatTime(side.length)}</span>
             </div>
             <div class="shz-rows">
@@ -112,7 +112,7 @@ const count = release.tracks.length;
         <span class="shz-tape"></span>
       </span>
       <h3 class="shz-grab">Descargalo</h3>
-      <a class="shz-dymo shz-dymo-btn" href={release.downloadUrl} target="_blank" rel="noopener">
+      <a class="dymo shz-dymo-btn" href={release.downloadUrl} target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v10.2l3.6-3.6 1.4 1.4-6 6-6-6 1.4-1.4 3.6 3.6zM4 19h16v2H4z"></path></svg>
         Descargar MP3
       </a>
@@ -140,19 +140,7 @@ const count = release.tracks.length;
     background-size: 180px;
   }
 
-  /* Label-maker tape: Lado A / B and the download button. */
-  .shz .shz-dymo {
-    display: inline-block;
-    background: var(--shz-ink);
-    color: #f4f4f4;
-    padding: 0.5rem 1.2rem 0.4rem;
-    border-radius: 2px;
-    font: 700 1.4rem/1 var(--shz-mono);
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35), 0 -1px 0 rgba(0, 0, 0, 0.9);
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
-  }
+  /* Lado A / B and the download button use the global .dymo tape (src/styles/papel.css). */
 
   .shz-side {
     display: flex;
@@ -163,7 +151,7 @@ const count = release.tracks.length;
   .shz-side:first-child {
     margin-top: 0;
   }
-  .shz-side .shz-dymo {
+  .shz-side .dymo {
     transform: rotate(-1.5deg);
   }
   .shz-side-len {
