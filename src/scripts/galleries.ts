@@ -61,6 +61,29 @@ async function initGalleries(): Promise<void> {
   });
 }
 
+/**
+ * Keep Juicebox's own <head> nodes — its <script> and the theme.css it injects —
+ * across navigations. The router drops head elements the incoming page doesn't
+ * have, and Juicebox resolves its theme relative to its <script> tag: once that
+ * is gone, a second visit requests /classic/theme.css, gets a 404 and renders an
+ * unstyled, blank gallery. The router keeps an element only when the new page
+ * carries a match for its persist id, so a placeholder is planted in each one.
+ */
+const PERSIST_ATTR = 'data-astro-transition-persist';
+
+document.addEventListener('astro:before-swap', (event) => {
+  const { newDocument } = event as Event & { newDocument: Document };
+  document.head
+    .querySelectorAll<HTMLElement>('script[src*="/galleries/jbcore/"], link[href*="/galleries/jbcore/"]')
+    .forEach((el, i) => {
+      const id = el.getAttribute(PERSIST_ATTR) ?? `juicebox-${i}`;
+      el.setAttribute(PERSIST_ATTR, id);
+      const placeholder = newDocument.createElement(el.tagName);
+      placeholder.setAttribute(PERSIST_ATTR, id);
+      newDocument.head.append(placeholder);
+    });
+});
+
 document.addEventListener('astro:page-load', () => {
   void initGalleries();
 });

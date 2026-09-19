@@ -54,3 +54,64 @@ test('release pages keep their own metadata after a client-side navigation', asy
     'https://www.superheroes.com.ar/escolares'
   );
 });
+
+test('the header marks the current section and turns solid on scroll', async ({ page }) => {
+  await page.goto('/album-verde');
+  const header = page.locator('.shh');
+  await expect(page.locator('.shh-link.is-active')).toHaveText('Discos');
+  await expect(header).not.toHaveClass(/is-solid/);
+
+  await page.mouse.wheel(0, 600);
+  await expect(header).toHaveClass(/is-solid/);
+
+  await page.click('.shh-link[href="/gracias"]');
+  await expect(page).toHaveURL(/gracias$/);
+  await expect(page.locator('.shh-link[aria-current="page"]')).toHaveText('Gracias');
+});
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 780 } });
+
+  test('the header menu opens, navigates and closes', async ({ page }) => {
+    await page.goto('/');
+    const toggle = page.locator('.shh-toggle');
+    const gracias = page.locator('.shh-link[href="/gracias"]');
+
+    await expect(gracias).toBeHidden();
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(gracias).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(gracias).toBeHidden();
+
+    await toggle.click();
+    await gracias.click();
+    await expect(page).toHaveURL(/gracias$/);
+    await expect(page.locator('.shh-toggle')).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('h2', { hasText: 'Gracias.' })).toBeVisible();
+  });
+});
+
+test('juicebox galleries still render on a second client-side visit', async ({ page }) => {
+  const missing: string[] = [];
+  page.on('response', (r) => {
+    if (r.status() === 404) missing.push(r.url());
+  });
+
+  await page.goto('/galeria-de-fotos');
+  await expect(page.locator('.juicebox-gallery[data-config]').first()).toHaveAttribute('data-jb-init', 'true');
+  await page.click('.shh-link[href="/gracias"]');
+  await expect(page).toHaveURL(/gracias$/);
+  await page.click('.shh-link[href="/galeria-de-fotos"]');
+  await expect(page).toHaveURL(/galeria-de-fotos$/);
+
+  // The theme stylesheet must still be the real one, not a root-relative 404.
+  const theme = page.locator('head link[href*="/galleries/jbcore/classic/theme.css"]');
+  await expect(theme).toHaveCount(1);
+  // Unstyled Juicebox still fills the container, so check it actually has a size.
+  await expect
+    .poll(async () => (await page.locator('.juicebox-gallery[data-config]').first().boundingBox())?.height ?? 0)
+    .toBeGreaterThan(200);
+  expect(missing.filter((u) => u.includes('theme.css'))).toEqual([]);
+});

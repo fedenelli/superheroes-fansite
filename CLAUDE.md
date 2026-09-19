@@ -35,13 +35,17 @@ src/pages/[slug].astro   the 9 release pages, from RELEASES
 src/pages/index.astro    hero + 10-tile grid + photos banner
 src/pages/discografia.astro    4 Bandcamp panels, no audio
 src/pages/galeria-de-fotos.astro   3 Juicebox galleries
-src/layouts/Base.astro   head/meta, GTM, chrome, <Player/>, ClientRouter
+src/pages/gracias.astro  the dedication note (used to be the hamburger overlay)
+src/layouts/Base.astro   head/meta, GTM, <Header/>, footer, <Player/>, ClientRouter
+src/components/Header.astro   top bar: logo + Discos/Fotos/Gracias (/discografia is reached from the home grid)
 src/data/releases.ts     the dataset — 9 releases, 125 tracks
 src/data/pages.ts        home grid, studio albums, gallery configs
 public/assets/           css, fonts, img, og_img, galleries — served verbatim
 ```
 
 `Base.astro` takes a `variant`: `'home'` reproduces the wider chrome that `/` and `/discografia` use (4rem logo, 4/4/4 footer, centred social icons); everything else uses `'inner'` (3.5rem logo, 5/3/4 footer). That difference is in the original design, not an accident.
+
+`Base.astro` also takes `overlayHeader`: the header starts transparent (with a dark scrim) and `ui.ts` adds `.is-solid` once the page scrolls. The black fill is a `::after` layer faded by opacity, not a `background` swap, because a gradient can't transition and would snap. Only pages whose first section is a full-bleed image set it — home, `/discografia` and the release pages. White-topped pages (fotos, gracias, 404) leave it off and the bar is always black. Below 768px the same `<nav>` becomes a full-screen menu; there is deliberately one set of links, not a second hidden copy, so tests that click `a[href=…]` never hit an invisible duplicate.
 
 ## Constraints that are easy to violate
 
