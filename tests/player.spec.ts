@@ -175,6 +175,56 @@ test('media session carries the track for lock screens and headsets', async ({ p
     .toEqual({ title: 'Golosinas', artist: 'Superhéroes', album: 'Album Verde' });
 });
 
+test('plays are reported to GTM with the track and the release', async ({ page }) => {
+  const events = () =>
+    page.evaluate(() =>
+      ((window as unknown as { dataLayer?: Record<string, unknown>[] }).dataLayer ?? [])
+        .filter((e) => String(e.event).startsWith('audio_') || e.event === 'album_start')
+        .map(({ event, audio_title, audio_album_slug, audio_track_number, audio_percent, audio_trigger }) => ({
+          event,
+          audio_title,
+          audio_album_slug,
+          audio_track_number,
+          audio_percent,
+          audio_trigger,
+        }))
+    );
+
+  await page.goto('/album-verde');
+  await playTrack(page, 0);
+  await expect.poll(events).toEqual([
+    { event: 'album_start', audio_title: 'De boliche en boliche', audio_album_slug: 'album-verde', audio_track_number: 1, audio_percent: undefined, audio_trigger: 'tracklist' },
+    { event: 'audio_start', audio_title: 'De boliche en boliche', audio_album_slug: 'album-verde', audio_track_number: 1, audio_percent: undefined, audio_trigger: 'tracklist' },
+  ]);
+
+  // The same release carries on across a navigation: a new song, not a new album.
+  await page.click('a[href="/como-va-la-reserva"]');
+  await expect(page).toHaveURL(/como-va-la-reserva$/);
+  await page.click('.shp-bar [data-action="next"]');
+  await expect.poll(async () => (await events()).at(-1)).toMatchObject({
+    event: 'audio_start',
+    audio_title: 'Golosinas',
+    audio_track_number: 2,
+    audio_trigger: 'next',
+  });
+
+  // Jump near the end: every milestone, the completion, then the autoplayed next song.
+  await page.evaluate(() => {
+    const audio = document.querySelector('#sh-audio') as HTMLAudioElement;
+    audio.currentTime = audio.duration - 1;
+  });
+  await expect
+    .poll(async () => (await events()).slice(3).map((e) => [e.event, e.audio_percent, e.audio_track_number, e.audio_trigger]))
+    .toEqual([
+      ['audio_progress', 25, 2, 'next'],
+      ['audio_progress', 50, 2, 'next'],
+      ['audio_progress', 75, 2, 'next'],
+      ['audio_complete', 100, 2, 'next'],
+      ['audio_start', undefined, 3, 'auto'],
+    ]);
+  expect((await events()).filter((e) => e.event === 'album_start')).toHaveLength(1);
+});
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 

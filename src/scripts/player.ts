@@ -366,10 +366,75 @@ function wireMediaSession(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Analytics: what gets listened to, pushed to GTM's dataLayer
+// ---------------------------------------------------------------------------
+
+/** What made a track start, so autoplay can be told apart from a chosen song. */
+type Trigger = 'tracklist' | 'queue' | 'next' | 'previous' | 'auto' | 'repeat' | 'resume';
+
+/** Set when a track is loaded or restarted; the next `playing` event reports it. */
+let pendingStart: Trigger | null = null;
+/** The listen in progress, once its start has been reported. */
+let listen: { trigger: Trigger; reported: Set<number> } | null = null;
+/** Release of the last reported start. Module scope, so it spans navigations. */
+let lastAlbum = '';
+const MILESTONES = [25, 50, 75];
+
+/**
+ * Every push carries the full set of keys: GTM merges pushes into one data
+ * model, so a key left out would keep the previous event's value.
+ */
+function pushAudioEvent(event: string, percent?: number): void {
+  const track = current();
+  const queue = state.queue;
+  if (!track || !queue || !listen) return;
+  const dataLayer = ((window as unknown as { dataLayer?: unknown[] }).dataLayer ??= []);
+  dataLayer.push({
+    event,
+    audio_title: track.title,
+    audio_album: queue.album,
+    audio_album_slug: queue.slug,
+    audio_track_number: state.index + 1,
+    audio_duration: Math.round(knownDuration() ?? 0),
+    audio_current_time: Math.round(audio?.currentTime ?? 0),
+    audio_percent: percent,
+    audio_trigger: listen.trigger,
+  });
+}
+
+function reportStart(): void {
+  if (!pendingStart || !state.queue) return;
+  listen = { trigger: pendingStart, reported: new Set() };
+  pendingStart = null;
+  if (state.queue.slug !== lastAlbum) {
+    lastAlbum = state.queue.slug;
+    pushAudioEvent('album_start');
+  }
+  pushAudioEvent('audio_start');
+}
+
+function reportProgress(): void {
+  const duration = knownDuration();
+  if (!audio || !listen || !duration) return;
+  const pct = (audio.currentTime / duration) * 100;
+  for (const m of MILESTONES) {
+    if (pct >= m && !listen.reported.has(m)) {
+      listen.reported.add(m);
+      pushAudioEvent('audio_progress', m);
+    }
+  }
+}
+
+function reportComplete(): void {
+  pushAudioEvent('audio_complete', 100);
+  listen = null;
+}
+
+// ---------------------------------------------------------------------------
 // Playback
 // ---------------------------------------------------------------------------
 
-function play(index: number): void {
+function play(index: number, via: Trigger = 'resume'): void {
   if (!audio || !state.queue) return;
   const track = state.queue.tracks[index];
   if (!track) return;
@@ -377,6 +442,10 @@ function play(index: number): void {
   if (state.index !== index || audio.src !== track.url) {
     state.index = index;
     audio.src = track.url;
+    pendingStart = via;
+    listen = null;
+  } else if (audio.ended) {
+    pendingStart = via;
   }
   void audio.play().catch(() => {
     /* autoplay refusal or a dead file — leave the UI in its paused state */
@@ -396,7 +465,7 @@ function togglePlay(): void {
 
 function step(delta: number): void {
   const next = neighbour(delta);
-  if (next >= 0) play(next);
+  if (next >= 0) play(next, delta > 0 ? 'next' : 'previous');
 }
 
 /** Like every music app: "previous" restarts the song unless it has barely begun. */
@@ -406,7 +475,7 @@ function previous(): void {
     return;
   }
   const prev = neighbour(-1);
-  if (prev >= 0) play(prev);
+  if (prev >= 0) play(prev, 'previous');
   else seek(0);
 }
 
@@ -431,7 +500,7 @@ function selectTrack(queue: Queue, index: number): void {
   state.queue = queue;
   state.index = index;
   if (newQueue || state.shuffle) rebuildOrder();
-  play(index);
+  play(index, 'tracklist');
 }
 
 function toggleShuffle(): void {
@@ -670,7 +739,7 @@ function wirePersistentPlayer(): void {
 
   root.querySelector('[data-bind="queue"]')?.addEventListener('click', (event) => {
     const button = (event.target as Element).closest<HTMLElement>('button[data-index]');
-    if (button) play(Number(button.dataset.index));
+    if (button) play(Number(button.dataset.index), 'queue');
   });
 
   const sheet = root.querySelector<HTMLElement>('.shp-sheet');
@@ -682,7 +751,11 @@ function wirePersistentPlayer(): void {
 
   if (pipApi()) root.querySelectorAll<HTMLElement>('[data-action="pip"]').forEach((b) => (b.hidden = false));
 
-  audio.addEventListener('timeupdate', renderProgress);
+  audio.addEventListener('timeupdate', () => {
+    renderProgress();
+    reportProgress();
+  });
+  audio.addEventListener('playing', reportStart);
   audio.addEventListener('loadedmetadata', () => {
     renderNowPlaying();
     updatePositionState();
@@ -693,13 +766,15 @@ function wirePersistentPlayer(): void {
   audio.addEventListener('volumechange', renderVolume);
   audio.addEventListener('ended', () => {
     if (!audio) return;
+    reportComplete();
     if (state.repeat === 'one') {
+      pendingStart = 'repeat';
       audio.currentTime = 0;
       void audio.play().catch(() => {});
       return;
     }
     const next = neighbour(1);
-    if (next >= 0) play(next);
+    if (next >= 0) play(next, 'auto');
     else render();
   });
 

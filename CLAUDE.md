@@ -28,6 +28,8 @@ The old implementation did the opposite — current track was `.trak-item.active
 
 Because content is swapped rather than reloaded, anything that used to run just by having a `<script>` tag parsed must now be driven from `astro:page-load`: tracklist bindings, Juicebox init (`src/scripts/galleries.ts`), GTM pageviews and the chrome handlers in `src/scripts/ui.ts`. Listeners on `window` or on the persisted player are bound **once**; listeners on swapped-in page content are rebound per navigation.
 
+**Analytics.** `player.ts` pushes `album_start`, `audio_start`, `audio_progress` (25/50/75) and `audio_complete` to `dataLayer`, each with the full set of `audio_*` keys (GTM merges pushes, so an omitted key would keep a stale value). A start is reported on the `playing` event, not on click, so a file that fails to decode is never counted. The GTM container (GTM-N3SK6W) is configured outside this repo: these events reach GA4 only if it has a trigger and a GA4 event tag for them.
+
 ## Layout
 
 ```
