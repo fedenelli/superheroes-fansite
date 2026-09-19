@@ -50,6 +50,8 @@ public/assets/           css, fonts, img, og_img — served verbatim
 
 `Base.astro` takes a `variant`: `'home'` reproduces the wider chrome that `/` and `/discografia` use (4rem logo, 4/4/4 footer, centred social icons); everything else uses `'inner'` (3.5rem logo, 5/3/4 footer). That difference is in the original design, not an accident.
 
+**Indexing.** Base prints the canonical URL, and pages pass schema.org objects (built in `src/data/seo.ts`) as `jsonLd`: the home has `WebSite` + `MusicGroup`, the releases have `MusicAlbum`, and the photo sessions have `ImageGallery`. Each graph repeats `BANDA`, because Google does not resolve an `@id` across pages. `src/pages/sitemap.xml.ts` and `robots.txt.ts` are built from the same data, so a new release or photo session is picked up without any extra step. Only the 404 sets `noindex`. The page's main title is `<Titulo as="h1">`.
+
 `Base.astro` also takes `overlayHeader`: the header starts transparent (with a dark scrim) and `ui.ts` adds `.is-solid` once the page scrolls. The black fill is a `::after` layer faded by opacity, not a `background` swap, because a gradient can't transition and would snap. Only pages whose first section is a full-bleed image set it — home, `/discografia` and the release pages. Pages that open straight onto paper (fotos, gracias, 404) leave it off and the bar is always black. Below 768px the same `<nav>` becomes a full-screen menu; there is deliberately one set of links, not a second hidden copy, so tests that click `a[href=…]` never hit an invisible duplicate.
 
 ## Constraints that are easy to violate

@@ -4,6 +4,8 @@ import Base from '../../layouts/Base.astro';
 import Titulo from '../../components/Titulo.astro';
 import Visor from '../../components/Visor.astro';
 import { SESIONES, sesionHref, fechaCorta, fechaLarga, versiones, type SesionConFotos } from '../../data/fotos';
+import { SITE } from '../../data/site';
+import { BANDA, migas, grafo } from '../../data/seo';
 
 export function getStaticPaths() {
   return SESIONES.map((sesion, i) => ({
@@ -28,22 +30,39 @@ const fotos = (await Promise.all(sesion.fotos.map(versiones))).map((v, i) => ({
 
 // Share card: the cover, cropped to the 1.91:1 that Facebook and Twitter expect.
 const tarjeta = await getImage({ src: sesion.portadaFoto.image, width: 1200, height: 630, fit: 'cover', format: 'jpg' });
+
+const galeria = {
+  '@type': 'ImageGallery',
+  name: `Superhéroes en ${sesion.lugar}, ${fechaLarga(sesion.fecha)}`,
+  url: `${SITE.origin}${sesionHref(sesion)}`,
+  about: { '@id': BANDA['@id'] },
+  contentLocation: { '@type': 'Place', name: sesion.lugar },
+  temporalCoverage: sesion.fecha,
+  ...(sesion.credito && { creator: { '@type': 'Person', name: sesion.credito } }),
+  image: fotos.map((f) => ({
+    '@type': 'ImageObject',
+    contentUrl: `${SITE.origin}${f.grande}`,
+    thumbnailUrl: `${SITE.origin}${f.mini}`,
+    caption: f.alt,
+  })),
+};
 ---
 
 <Base
-  title={`${sesion.lugar} ${fechaCorta(sesion.fecha)} — Fotos — Superheroes`}
+  title={`${sesion.lugar} ${fechaCorta(sesion.fecha)} — Fotos — Superhéroes`}
   description={`${sesion.fotos.length} fotos de Superhéroes en ${sesion.lugar}, el ${fechaLarga(sesion.fecha)}.`}
   ogTitle={`Superhéroes en ${sesion.lugar} - ${fechaCorta(sesion.fecha)}`}
   path={sesionHref(sesion)}
   ogImage={tarjeta.src}
   twitterImage={tarjeta.src}
+  jsonLd={grafo(galeria, BANDA, migas(['Fotos', '/galeria-de-fotos'], [titulo, sesionHref(sesion)]))}
 >
   <!-- =============== INICIO SESION ================ -->
   <section class="albumSingle padding background-properties">
     <div class="container">
       <a href="/galeria-de-fotos" class="shf-volver">← Todas las fotos</a>
 
-      <Titulo>{sesion.lugar}</Titulo>
+      <Titulo as="h1">{sesion.lugar}</Titulo>
       <p class="titulo-bajada">
         {fechaLarga(sesion.fecha)} · {sesion.fotos.length} fotos{sesion.credito && ` · Fotos: ${sesion.credito}`}
       </p>

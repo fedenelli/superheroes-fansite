@@ -1,15 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
 import { STUDIO_ALBUMS } from '../data/pages';
+import { migas, grafo } from '../data/seo';
 ---
 
 <Base
-  title="Superhéroes"
+  title="Discografía — Superhéroes"
   description="Acá podés encontrar los discos que Superhéroes grabó en estudio. Eso no quiere decir que estén buenos."
   ogTitle="Superhéroes - Discografía"
   path="/discografia"
   ogImage="fbdiscos.png"
   twitterImage="twdiscos.png"
+  jsonLd={grafo(migas(['Discografía', '/discografia']))}
   variant="home"
   overlayHeader
 >

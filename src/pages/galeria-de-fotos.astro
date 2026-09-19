@@ -3,6 +3,7 @@ import { getImage } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Titulo from '../components/Titulo.astro';
 import { SESIONES, sesionHref, fechaCorta } from '../data/fotos';
+import { migas, grafo } from '../data/seo';
 
 /**
  * Each session is a little pile of prints: its cover on top and the next two
@@ -23,7 +24,8 @@ const total = SESIONES.reduce((n, s) => n + s.fotos.length, 0);
 ---
 
 <Base
-  title="Fotos — Superheroes"
+  title="Fotos — Superhéroes"
+  jsonLd={grafo(migas(['Fotos', '/galeria-de-fotos']))}
   description={`Fotos de Superhéroes en vivo: ${SESIONES.map((s) => `${s.lugar} (${fechaCorta(s.fecha)})`).join(', ')}.`}
   ogTitle="Superhéroes - Galería de Fotos"
   path="/galeria-de-fotos"
@@ -33,7 +35,7 @@ const total = SESIONES.reduce((n, s) => n + s.fotos.length, 0);
   <!-- =============== INICIO SESIONES ================ -->
   <section class="albumSingle padding background-properties">
     <div class="container">
-      <Titulo>Fotos</Titulo>
+      <Titulo as="h1">Fotos</Titulo>
       <p class="titulo-bajada">{SESIONES.length} sesiones · {total} fotos</p>
 
       <ul class="shf-sesiones">
