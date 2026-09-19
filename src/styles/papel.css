@@ -1,0 +1,192 @@
+/*
+ * Papel: the whole site sits on a sheet of dotted drawing paper, and titles
+ * are label-maker tape stuck on top of it. Selectors carry an extra `html`
+ * where they compete with master.css, since bundle order isn't guaranteed.
+ */
+:root {
+  --papel: #f3efe4;
+  --papel-dot: rgba(40, 32, 20, 0.26);
+  --papel-grid: 2.2rem;
+  --papel-bg: radial-gradient(circle, var(--papel-dot) 0.1rem, transparent 0.14rem) 0 0 / var(--papel-grid)
+      var(--papel-grid),
+    var(--papel);
+  --dymo-tape: #151515;
+  --dymo-font: 'Courier Prime', 'Courier New', monospace;
+}
+
+html body {
+  background: var(--papel-bg);
+  /* Short pages (gracias, 404) keep the footer at the bottom of the window. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ---- label-maker tape ---- */
+.dymo {
+  display: inline-block;
+  padding: 0.5rem 1.2rem 0.4rem;
+  border-radius: 2px;
+  /* A little gloss up top and a darker bottom edge, like the PVC tape. */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0.3)),
+    var(--dymo-tape);
+  color: #f4f4f4;
+  font: 700 1.4rem/1 var(--dymo-font);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  /* Embossed letters: lit from above, shadowed below. */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35), 0 -1px 0 rgba(0, 0, 0, 0.9);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* ---- section titles (Titulo.astro) ---- */
+html body .titulo {
+  margin: 0 0 8rem;
+  padding: 0;
+  text-align: center;
+  font: inherit;
+  transform: rotate(-1.2deg);
+}
+html body .titulo .dymo {
+  display: inline;
+  /* Long titles wrap onto a second strip of tape instead of overflowing. */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0.9rem 2.2rem 0.7rem;
+  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  line-height: 2.1;
+  letter-spacing: 0.24em;
+}
+
+/*
+ * ---- nota: prose on a photocopied sheet taped onto the paper ----
+ * Same ink, type and grain as the release tracklists (Tracklist.astro). The
+ * sheet is opaque so the dots don't run through the text. Used by /gracias
+ * and the 404.
+ */
+.nota {
+  position: relative;
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 4.4rem 4.8rem 4rem;
+  border-top: 2px solid var(--dymo-tape);
+  border-bottom: 2px solid var(--dymo-tape);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
+      0 0 / 180px,
+    #fbfaf6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transform: rotate(0.6deg);
+}
+.nota-cinta {
+  position: absolute;
+  top: -1.2rem;
+  left: 50%;
+  width: 9rem;
+  height: 2.6rem;
+  background: rgba(236, 226, 190, 0.82);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transform: translateX(-50%) rotate(-4deg);
+}
+html body .nota p {
+  margin: 0 0 1.8rem;
+  font: 400 1.8rem/1.75 var(--dymo-font);
+  color: #111;
+}
+html body .nota p:last-child {
+  margin-bottom: 0;
+}
+html body .nota .nota-firma {
+  margin-top: 2.8rem;
+  text-align: right;
+  font-weight: 700;
+}
+html body .nota a {
+  color: #111;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+}
+html body .nota a:hover,
+html body .nota a:focus-visible {
+  background: #111;
+  color: #fbfaf6;
+  text-decoration: none;
+}
+
+/* ---- chrome that used to be white or grey ---- */
+/*
+ * Footer: a black band that closes the page like the header opens it, so the
+ * small print never sits on the dots. Type matches the tape lettering.
+ */
+html body .footer-papel {
+  margin-top: auto;
+  padding: 1.4rem 0;
+  background: var(--dymo-tape);
+}
+/* master.css centres these with a 38px line-height, which gaps badly once the credit wraps. */
+html body .footer-papel .copyFooter,
+html body .footer-papel .goTop {
+  padding: 1.1rem 0;
+  line-height: 1.5;
+}
+html body .footer-papel .copyFooter a,
+html body .footer-papel .goTop a {
+  font: 700 1.3rem/1.5 var(--dymo-font);
+  letter-spacing: 0.12em;
+  color: #f4f4f4;
+}
+html body .footer-papel .goTop i {
+  color: #f4f4f4;
+}
+html body .footer-papel .social-icons ul li a i {
+  font-size: 1.8rem;
+  color: #f4f4f4;
+}
+html body .footer-papel .shopIcon span {
+  background-color: #3a3a3a;
+}
+html body .footer-papel .copyFooter a:hover,
+html body .footer-papel .copyFooter a:focus-visible,
+html body .footer-papel .goTop a:hover,
+html body .footer-papel .goTop a:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+}
+/* The cover over each pagination tile's photo: now paper, still lifts on hover. */
+html body .pagination-2 .pagination-previous,
+html body .pagination-2 .pagination-next {
+  background: var(--papel-bg);
+}
+html body .pagination-2 [style] a:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+html body .pagination-2 .row {
+  border-top: 2px solid var(--dymo-tape);
+}
+html body .pagination-2 .col-sm-6 + .col-sm-6 a {
+  border-left: 2px solid var(--dymo-tape);
+}
+
+@media (max-width: 767px) {
+  html body .titulo {
+    margin-bottom: 5rem;
+  }
+  html body .titulo .dymo {
+    padding: 0.7rem 1.4rem 0.5rem;
+    letter-spacing: 0.16em;
+  }
+  .nota {
+    padding: 3.6rem 2.2rem 3rem;
+    transform: none;
+  }
+  html body .nota p {
+    font-size: 1.6rem;
+  }
+}

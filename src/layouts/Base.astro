@@ -3,6 +3,7 @@ import { ClientRouter } from 'astro:transitions';
 import Header from '../components/Header.astro';
 import Player from '../components/Player.astro';
 import { SITE } from '../data/site';
+import '../styles/papel.css';
 
 export interface Props {
   /** <title> contents. */
@@ -54,6 +55,10 @@ const canonical = `${SITE.origin}${path}`;
 
     <!-- ========== ESTILOS CSS ========== -->
     <link rel="stylesheet" href="/assets/css/master.css" />
+    <!-- Courier Prime: the label-maker tape on every title. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" />
     <slot name="head" />
     {isHome && <style>{"body{font-family:'Conv_BebasNeue Regular';}"}</style>}
 
@@ -107,7 +112,7 @@ const canonical = `${SITE.origin}${path}`;
     <slot />
 
     <!-- =============== INICIO FOOTER ================ -->
-    <section style="background-color:#eeeeee;">
+    <section class="footer-papel">
       <div class="footer footerPadding">
         <div class="container">
           <div class="row">

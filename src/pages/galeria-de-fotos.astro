@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Titulo from '../components/Titulo.astro';
 import { GALLERIES } from '../data/pages';
 ---
 
@@ -12,16 +13,12 @@ import { GALLERIES } from '../data/pages';
   twitterImage="twprofile.jpg"
 >
   <!-- =============== INICIO GALERIAS ================ -->
-  <section class="albumSingle background-properties" style="padding:7rem;">
+  <section class="albumSingle background-properties" style="padding:12rem 7rem 7rem;">
     <div class="container">
       {
         GALLERIES.map((gallery) => (
           <>
-            <div class="sectionTitle" style="padding-bottom:3%;">
-              <span class="heading-t3" />
-              <h2>{gallery.heading}</h2>
-              <span class="heading-b3" />
-            </div>
+            <Titulo>{gallery.heading}</Titulo>
             <div class="row paddingBottom">
               <div class="col-sm-12">
                 <div

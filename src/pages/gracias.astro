@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Titulo from '../components/Titulo.astro';
 ---
 
 <Base
@@ -12,28 +13,20 @@ import Base from '../layouts/Base.astro';
   <!-- =============== INICIO GRACIAS ================ -->
   <section class="albumSingle padding background-properties">
     <div class="container">
-      <div class="sectionTitle paddingBottom">
-        <span class="heading-t3"></span>
-        <h2>Gracias.</h2>
-        <span class="heading-b3"></span>
-      </div>
-      <div style="width:80%; max-width:600px; margin:auto;">
-        <p style="text-align:justify; font-size:1.6rem; line-height:2.4rem;">
+      <Titulo>Gracias.</Titulo>
+      <article class="nota">
+        <span class="nota-cinta" aria-hidden="true"></span>
+        <p>
           Superhéroes fue la banda que escuché durante mi adolescencia, que tal vez no sirvió para
           desarrollar mi oído musical pero sí me hizo compartir grandes momentos con mis amigos. Por
           eso le estoy agradecido, y por eso esta web me pareció una forma de reconocerle algo a un
           grupo de personas que me regaló muchas horas de diversión.
         </p>
-        <br />
-        <p style="text-align:justify; font-size:1.6rem; line-height:2.4rem;">
-          Ojalá lo disfruten tanto como yo.
-        </p>
-        <br />
-        <p style="text-align:right; font-weight:bold; font-size:1.6rem; line-height:2.4rem;">
-          Fede Nelli.
-        </p>
-      </div>
+        <p>Ojalá lo disfruten tanto como yo.</p>
+        <p class="nota-firma">Fede Nelli.</p>
+      </article>
     </div>
   </section>
   <!-- =============== FIN GRACIAS ================ -->
 </Base>
+
