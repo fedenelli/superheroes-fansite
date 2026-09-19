@@ -166,18 +166,21 @@ const { titulo, fotos } = Astro.props;
   /* ---- stage ---- */
   .shv-escenario {
     position: relative;
-    display: grid;
-    place-items: center;
     min-height: 0;
     overflow: hidden;
-    padding: 0 7rem;
     /* Swipes are handled in visor.ts. */
     touch-action: none;
     user-select: none;
   }
-  /* Fills the stage and letterboxes itself; a max-height inside the grid cell wouldn't resolve. */
+  /*
+   * Pinned to the stage and letterboxed with object-fit, so the whole photo is
+   * always on screen. In the flow, a tall photo would size the stage to its own
+   * height and get cut off. The side inset leaves room for the arrows.
+   */
   .shv-img {
-    width: 100%;
+    position: absolute;
+    inset: 0 7rem;
+    width: calc(100% - 14rem);
     height: 100%;
     object-fit: contain;
     transition: opacity 0.2s;
@@ -259,8 +262,9 @@ const { titulo, fotos } = Astro.props;
       margin-left: auto;
     }
     /* Phones swipe; the arrows would only cover the photo. */
-    .shv-escenario {
-      padding: 0;
+    .shv-img {
+      inset: 0;
+      width: 100%;
     }
     .shv-paso {
       display: none;

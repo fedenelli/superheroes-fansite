@@ -39,8 +39,9 @@ src/pages/discografia.astro    4 Bandcamp panels, no audio
 src/pages/galeria-de-fotos.astro   index of photo sessions
 src/pages/galeria-de-fotos/[sesion].astro   one session: contact sheet + <Visor/>
 src/pages/gracias.astro  the dedication note (used to be the hamburger overlay)
+src/pages/aportes.astro  fan-sent loose material (src/data/aportes.ts + src/assets/aportes/<slug>/) and the call to send more
 src/layouts/Base.astro   head/meta, GTM, <Header/>, footer, <Player/>, ClientRouter
-src/components/Header.astro   top bar: logo + Discos/Fotos/Gracias (/discografia is reached from the home grid)
+src/components/Header.astro   top bar: logo + Discos/Fotos/Aportes/Gracias (/discografia is reached from the home grid)
 src/data/releases.ts     the dataset — 9 releases, 125 tracks
 src/data/pages.ts        home grid, studio albums
 src/data/fotos.ts        photo sessions; photos live in src/assets/fotos/<slug>/

@@ -18,6 +18,7 @@ const { path, variant, overlay } = Astro.props;
 const LINKS = [
   { href: '/#discos', label: 'Discos', match: (p: string) => releaseBySlug.has(p.slice(1)) },
   { href: '/galeria-de-fotos', label: 'Fotos', match: (p: string) => p === '/galeria-de-fotos' || p.startsWith('/galeria-de-fotos/') },
+  { href: '/aportes', label: 'Aportes', match: (p: string) => p === '/aportes' },
   { href: '/gracias', label: 'Gracias', match: (p: string) => p === '/gracias' },
 ];
 
