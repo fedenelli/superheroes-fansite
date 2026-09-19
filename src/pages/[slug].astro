@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Titulo from '../components/Titulo.astro';
 import Tracklist from '../components/Tracklist.astro';
+import PlayKey from '../components/PlayKey.astro';
 import { RELEASES, type Release } from '../data/releases';
 
 interface Props {
@@ -41,6 +42,7 @@ const links = [release.prev, release.next] as const;
             data-stellar-background-ratio="0.5"
             data-stellar-vertical-offset="0">
           </div>
+          <PlayKey release={release} />
         </div>
       </div>
     </div>

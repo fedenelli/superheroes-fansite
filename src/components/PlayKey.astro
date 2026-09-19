@@ -1,0 +1,150 @@
+---
+import type { Release } from '../data/releases';
+import { SITE } from '../data/site';
+
+interface Props {
+  release: Release;
+}
+
+const { release } = Astro.props as Props;
+
+const playable = release.tracks.filter((t) => t.duration !== null).length;
+---
+
+<!--
+  "Escuchar el disco", drawn as the phone mini-player so it reads as the thing
+  that starts playback: without it the cover fills the screen and gives no hint
+  that there is anything to do. player.ts binds [data-play-album], tints the
+  card with the cover's colour and flips the icon while the album plays.
+-->
+<button type="button" class="shk" data-play-album data-cover={release.cover} aria-label={`Escuchar ${release.title}`}>
+  <img class="shk-cover" src={release.cover} alt="" />
+  <span class="shk-meta">
+    <span class="shk-title">{release.title}</span>
+    <span class="shk-sub">{SITE.artist} · {playable} temas</span>
+  </span>
+  <span class="shk-play" aria-hidden="true">
+    <svg class="shk-i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+    <svg class="shk-i-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+  </span>
+</button>
+
+<style>
+  /*
+   * Same card as .shp-bar on phones (Player.astro): tinted, rounded, cover on
+   * the left, round white play button on the right. Kept in step by hand, since
+   * those styles are namespaced to <sh-player>.
+   */
+  .shk {
+    --shk-tint: rgba(0, 0, 0, 0.55);
+    position: absolute;
+    left: 50%;
+    bottom: clamp(2.4rem, 6vh, 6rem);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    width: min(36rem, calc(100% - 3.2rem));
+    padding: 0.8rem;
+    border: 0;
+    border-radius: 0.8rem;
+    background: var(--shk-tint);
+    color: #fff;
+    font: 1.4rem/1.3 system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    text-align: left;
+    box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.4);
+    transform: translateX(-50%);
+    transition:
+      background-color 0.4s,
+      bottom 0.3s ease,
+      transform 0.1s;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .shk:active {
+    transform: translateX(-50%) scale(0.98);
+  }
+  .shk:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  .shk-cover {
+    flex: none;
+    width: 4.8rem;
+    height: 4.8rem;
+    border-radius: 0.4rem;
+    object-fit: cover;
+  }
+  .shk-meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .shk-title,
+  .shk-sub {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .shk-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+  }
+  .shk-sub {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .shk-play {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 4.4rem;
+    height: 4.4rem;
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
+    transition: transform 0.1s;
+  }
+  .shk:hover .shk-play {
+    transform: scale(1.06);
+  }
+  .shk-play svg {
+    grid-area: 1 / 1;
+    width: 2.4rem;
+    height: 2.4rem;
+    fill: currentColor;
+  }
+  .shk-i-pause,
+  .shk.is-playing .shk-i-play {
+    display: none;
+  }
+  .shk.is-playing .shk-i-pause {
+    display: block;
+  }
+
+  /* Once something is queued, the fixed player bar takes the bottom edge: sit above it. */
+  :global(body:has(sh-player:not([data-empty]))) .shk {
+    bottom: calc(9rem + 2.4rem);
+  }
+  @media (max-width: 767px) {
+    .shk {
+      bottom: max(2.4rem, env(safe-area-inset-bottom));
+    }
+    :global(body:has(sh-player:not([data-empty]))) .shk {
+      bottom: calc(5.6rem + 0.8rem + 1.2rem + env(safe-area-inset-bottom));
+    }
+    /* On a phone the mini-player below is this same card: don't show it twice. */
+    .shk.is-queued {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shk {
+      transition: none;
+    }
+  }
+</style>
