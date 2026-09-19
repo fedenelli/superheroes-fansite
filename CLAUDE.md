@@ -51,7 +51,9 @@ public/assets/           css, fonts, img, og_img, galleries — served verbatim
 
 **`public/_headers` rules must not overlap.** When several match one request Workers *concatenates* their values, so a `/*` catch-all plus per-directory overrides yields `max-age=3600, …, max-age=31536000` — first value wins and long-lived asset caching silently dies. HTML intentionally has no rule and uses the platform default (`max-age=0` + ETag).
 
-**Class names** like `mesh-*`, `trak-item`, `jp-playlist`, `albumIcon*` come from the original purchased theme and are load-bearing in `master.css`. `.trak-item.playing` drives the play/pause icon swap; `.mesh-play`/`.mesh-pause` have no CSS hiding either, so `player.ts` toggles them inline the way jPlayer used to.
+**Class names** like `trak-item`, `jp-playlist`, `albumIcon*` come from the original purchased theme and are load-bearing in `master.css`. `.trak-item.playing` drives the play/pause icon swap on release pages.
+
+**The player UI is self-contained.** `Player.astro` renders three views over the same state — the bottom bar (a mini-player below 768px), the "now playing" sheet (full screen on phones, queue panel on desktop) and a `.shp-pip` card that `player.ts` moves into a Document Picture-in-Picture window. Its styles are `is:global` and namespaced `.shp-*` on purpose: they get copied into the PiP document, and they must not use the legacy `mesh-*` classes that `master.css` still styles. Controls are wired per element via `[data-action]` (not delegated on `<sh-player>`), because the PiP card leaves that subtree. Big artwork uses each release's `heroImage`; the `cover` files are only 30×30.
 
 **Audio lives on DigitalOcean Spaces**, not in the repo. Track durations are baked into `releases.ts` at build time; the page renders them statically instead of shipping a hidden `<audio preload="metadata">` per track. `npm run durations -- <file.json>` re-probes via ffprobe.
 
