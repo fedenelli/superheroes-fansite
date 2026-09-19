@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "superheroes",
+  "compatibility_date": "2026-09-19",
+
+  // Static site: Astro pre-renders every route, so there is no Worker script
+  // and no adapter — Workers just serves the built directory.
+  "assets": {
+    "directory": "./dist",
+
+    // Astro's build.format:'file' emits `album-verde.html`; auto-trailing-slash
+    // serves that at `/album-verde`, which is exactly what the old .htaccess
+    // rewrite produced. Existing URLs keep working unchanged.
+    "html_handling": "auto-trailing-slash",
+
+    // Serve src/pages/404.astro for unknown paths.
+    "not_found_handling": "404-page"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

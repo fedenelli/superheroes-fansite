@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import { STUDIO_ALBUMS } from '../data/pages';
+---
+
+<Base
+  title="Superhéroes"
+  description="Acá podés encontrar los discos que Superhéroes grabó en estudio. Eso no quiere decir que estén buenos."
+  ogTitle="Superhéroes - Discografía"
+  path="/discografia"
+  ogImage="fbdiscos.png"
+  twitterImage="twdiscos.png"
+  variant="home"
+>
+  <!-- =============== INICIO ALBUMS SECTION ================ -->
+  {
+    STUDIO_ALBUMS.map((album) => (
+      <section class="fullAlbums" style={`background-image:url(${album.background});`}>
+        <div class="fullAlbumsContent col-sm-5" style={album.darkText ? 'color:#000000;' : undefined}>
+          <h1 set:html={album.titleHtml} />
+          <p>&nbsp;</p>
+          <div class="social-icons">
+            {album.links.map((link) => (
+              <a href={link.href} class="detailsSocial" target="_blank">
+                {link.label} <i class="fa fa-angle-right" />
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    ))
+  }
+  <!-- =============== FIN ALBUMS SECTION ================ -->
+</Base>

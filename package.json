@@ -1,0 +1,26 @@
+{
+  "name": "superheroes-fansite",
+  "type": "module",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Sitio web no oficial de Superhéroes",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "playwright test",
+    "durations": "node scripts/fetch-durations.mjs",
+    "cf:dev": "astro build && wrangler dev",
+    "deploy": "astro build && wrangler deploy"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@playwright/test": "^1.63.0",
+    "astro": "^7.3.3",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.135.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
