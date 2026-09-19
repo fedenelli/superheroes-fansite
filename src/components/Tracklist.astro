@@ -1,0 +1,425 @@
+---
+import type { Release, Track } from '../data/releases';
+
+interface Props {
+  release: Release;
+}
+
+const { release } = Astro.props as Props;
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** mm:ss, or h:mm:ss for a whole side that runs past the hour. */
+function formatTime(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+interface Side {
+  label: 'A' | 'B';
+  length: number;
+  tracks: { track: Track; index: number }[];
+}
+
+/**
+ * These are tapes, so the list reads as Lado A / Lado B. The cut goes where
+ * the two sides come out closest in length. Rows stay in dataset order, which
+ * player.ts relies on: it maps the nth `.trak-item` to the nth queue entry.
+ */
+function splitSides(tracks: Track[]): Side[] {
+  const secs = tracks.map((t) => t.duration ?? 0);
+  const total = secs.reduce((a, b) => a + b, 0);
+  let cut = 1;
+  let best = Infinity;
+  let acc = 0;
+  for (let i = 0; i < secs.length - 1; i++) {
+    acc += secs[i];
+    const diff = Math.abs(total - 2 * acc);
+    if (diff < best) {
+      best = diff;
+      cut = i + 1;
+    }
+  }
+  const side = (label: Side['label'], from: number, to: number): Side => ({
+    label,
+    length: secs.slice(from, to).reduce((a, b) => a + b, 0),
+    tracks: tracks.slice(from, to).map((track, i) => ({ track, index: from + i })),
+  });
+  return tracks.length > 1 ? [side('A', 0, cut), side('B', cut, tracks.length)] : [side('A', 0, tracks.length)];
+}
+
+const sides = splitSides(release.tracks);
+const minutes = Math.round(sides.reduce((a, s) => a + s.length, 0) / 60);
+const count = release.tracks.length;
+---
+
+<div class="row shz" style={`--shz-accent: ${release.accent};`}>
+  <div class="col-sm-8">
+    <div
+      class="jp-playlist shz-list"
+      data-release={release.slug}
+      data-album={release.title}
+      data-cover={release.cover}
+      data-art={release.heroImage}>
+      {
+        sides.map((side) => (
+          <>
+            <div class="shz-side">
+              <span class="shz-dymo">Lado {side.label}</span>
+              <span class="shz-side-len">{formatTime(side.length)}</span>
+            </div>
+            <div class="shz-rows">
+              {side.tracks.map(({ track, index }) => (
+                <div class={track.duration === null ? 'trak-item is-dead' : 'trak-item'}>
+                  <button type="button" class="play-pause-button" disabled={track.duration === null}>
+                    <span class="shz-n">{pad(index + 1)}</span>
+                    <span class="shz-eq" aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                    <span class="shz-title">
+                      <span>{track.title}</span>
+                    </span>
+                  </button>
+                  {track.duration === null ? (
+                    <span class="trak-duration">
+                      <span class="shz-stamp" title="El archivo está dañado y no se puede escuchar">
+                        cinta masticada
+                      </span>
+                    </span>
+                  ) : (
+                    <time class="trak-duration" datetime={`PT${track.duration}S`}>
+                      {formatTime(track.duration)}
+                    </time>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        ))
+      }
+      <p class="shz-foot">{count} temas / {minutes} min / grabado como se pudo</p>
+    </div>
+  </div>
+
+  <div class="col-sm-3 col-sm-offset-1">
+    <aside class="shz-get">
+      <span class="shz-xerox">
+        <img src={release.heroImage} alt={`Tapa de ${release.title}`} loading="lazy" />
+        <span class="shz-tape"></span>
+      </span>
+      <h3 class="shz-grab">Descargalo</h3>
+      <a class="shz-dymo shz-dymo-btn" href={release.downloadUrl} target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v10.2l3.6-3.6 1.4 1.4-6 6-6-6 1.4-1.4 3.6 3.6zM4 19h16v2H4z"></path></svg>
+        Descargar MP3
+      </a>
+      <p class="shz-fine">{count} temas · {minutes} min<br />vía Google Drive</p>
+    </aside>
+  </div>
+</div>
+
+<style is:global>
+  /*
+   * Fotocopia: the tracklist as the back of a home-made bootleg. Global and
+   * namespaced .shz-* like the player, because .trak-item still carries legacy
+   * master.css rules (floats, fixed heights, display: table on every child)
+   * that these selectors have to out-rank and reset.
+   */
+  .shz {
+    --shz-ink: #111;
+    --shz-paper: #fff;
+    --shz-mono: 'Courier Prime', 'Courier New', monospace;
+    --shz-display: 'Conv_BebasNeue Regular', 'Bebas Neue', Impact, sans-serif;
+  }
+
+  .shz-list {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px;
+  }
+
+  /* Label-maker tape: Lado A / B and the download button. */
+  .shz .shz-dymo {
+    display: inline-block;
+    background: var(--shz-ink);
+    color: #f4f4f4;
+    padding: 0.5rem 1.2rem 0.4rem;
+    border-radius: 2px;
+    font: 700 1.4rem/1 var(--shz-mono);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35), 0 -1px 0 rgba(0, 0, 0, 0.9);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .shz-side {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin: 2.2rem 0 0.6rem;
+  }
+  .shz-side:first-child {
+    margin-top: 0;
+  }
+  .shz-side .shz-dymo {
+    transform: rotate(-1.5deg);
+  }
+  .shz-side-len {
+    font: 700 1.3rem var(--shz-mono);
+    color: #555;
+  }
+
+  /* ---- rows ---- */
+  .shz .trak-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 5.4rem;
+    margin: 0;
+    padding: 0 0.8rem 0 0;
+    border: 0;
+    border-top: 2px solid var(--shz-ink);
+    color: var(--shz-ink);
+    position: relative;
+    transition: background-color 0.12s, color 0.12s;
+  }
+  .shz .shz-rows > .trak-item:last-child {
+    border-bottom: 2px solid var(--shz-ink);
+  }
+  .shz .trak-item::before,
+  .shz .trak-item::after {
+    content: none;
+  }
+  .shz .trak-item > * {
+    float: none;
+    height: auto;
+    display: block;
+  }
+
+  .shz .trak-item .play-pause-button {
+    display: grid;
+    grid-template-columns: 5.4rem minmax(0, 1fr);
+    align-items: center;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  /* The whole row is the hit area, duration included. */
+  .shz .trak-item .play-pause-button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .shz .trak-item .play-pause-button:focus-visible {
+    outline: none;
+  }
+  .shz .trak-item:has(.play-pause-button:focus-visible) {
+    outline: 3px solid var(--shz-accent);
+    outline-offset: -3px;
+  }
+  .shz .trak-item .play-pause-button:disabled {
+    cursor: not-allowed;
+  }
+
+  .shz-n,
+  .shz-eq {
+    grid-area: 1 / 1;
+    padding-left: 0.6rem;
+  }
+  .shz-n {
+    font: 3rem/1 var(--shz-display);
+  }
+  .shz-title {
+    padding: 0.8rem 1.2rem 0.6rem 0;
+    font: 2.4rem/1.05 var(--shz-display);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .shz-title > span {
+    position: relative;
+    z-index: 0;
+  }
+  .shz .trak-item .trak-duration {
+    width: auto;
+    line-height: 1;
+    text-align: right;
+    font: 700 1.4rem var(--shz-mono);
+    font-variant-numeric: tabular-nums;
+    color: inherit;
+  }
+
+  @media (hover: hover) {
+    .shz .trak-item:not(.is-dead):hover {
+      background: var(--shz-ink);
+      color: var(--shz-paper);
+    }
+  }
+
+  /* ---- now playing: highlighter on the title, bars instead of the number ---- */
+  /* Spans, not <i>: master.css paints a FontAwesome glyph on every .play-pause-button i. */
+  .shz-eq {
+    display: none;
+    align-items: flex-end;
+    gap: 2px;
+    height: 2rem;
+    color: var(--shz-accent);
+  }
+  .shz-eq > span {
+    width: 4px;
+    height: 70%;
+    background: currentColor;
+  }
+  .shz .trak-item.active .shz-n {
+    visibility: hidden;
+  }
+  .shz .trak-item.active .shz-eq {
+    display: inline-flex;
+  }
+  .shz .trak-item.playing .shz-eq > span {
+    animation: shz-eq 0.9s ease-in-out infinite;
+  }
+  .shz .trak-item.playing .shz-eq > span:nth-child(2) {
+    animation-delay: -0.3s;
+  }
+  .shz .trak-item.playing .shz-eq > span:nth-child(3) {
+    animation-delay: -0.6s;
+  }
+  @keyframes shz-eq {
+    0%,
+    100% {
+      height: 25%;
+    }
+    50% {
+      height: 100%;
+    }
+  }
+  .shz .trak-item.active .shz-title > span::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: -0.6rem;
+    right: -0.8rem;
+    top: 30%;
+    bottom: 0;
+    background: var(--shz-accent);
+    opacity: 0.85;
+    transform: skew(-8deg) rotate(-0.6deg);
+    border-radius: 2px;
+  }
+  @media (hover: hover) {
+    .shz .trak-item.active:hover .shz-eq {
+      color: var(--shz-paper);
+    }
+  }
+
+  .shz .trak-item.is-dead {
+    color: #9a9a9a;
+  }
+  .shz-stamp {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border: 2px solid #c3261c;
+    color: #c3261c;
+    font: 700 1.2rem var(--shz-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transform: rotate(-5deg);
+  }
+
+  .shz-foot {
+    margin: 1rem 0 0;
+    font: 700 1.3rem var(--shz-mono);
+    color: #444;
+    text-transform: uppercase;
+  }
+
+  /* ---- download ---- */
+  .shz-xerox {
+    position: relative;
+    display: block;
+    max-width: 28rem;
+  }
+  .shz-xerox img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border: 2px solid var(--shz-ink);
+    filter: grayscale(1) contrast(1.9) brightness(1.08);
+    transform: rotate(1.4deg);
+  }
+  .shz-tape {
+    position: absolute;
+    top: -1rem;
+    left: 50%;
+    width: 8rem;
+    height: 2.4rem;
+    background: rgba(236, 226, 190, 0.82);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    transform: translateX(-50%) rotate(-4deg);
+  }
+  .shz .shz-grab {
+    margin: 2.4rem 0 0.8rem;
+    padding: 0;
+    font: 3.4rem/0.95 var(--shz-display);
+    color: var(--shz-ink);
+    text-transform: uppercase;
+  }
+  .shz .shz-dymo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.2rem 1.8rem 1.1rem;
+    font-size: 1.7rem;
+    text-decoration: none;
+    transform: rotate(-2deg);
+    transition: transform 0.12s;
+  }
+  .shz .shz-dymo-btn:hover,
+  .shz .shz-dymo-btn:focus-visible {
+    color: #fff;
+    text-decoration: none;
+    transform: rotate(0deg) scale(1.03);
+  }
+  .shz .shz-dymo-btn:focus-visible {
+    outline: 3px solid var(--shz-accent);
+    outline-offset: 3px;
+  }
+  .shz-dymo-btn svg {
+    width: 1.8rem;
+    height: 1.8rem;
+    fill: currentColor;
+  }
+  .shz-fine {
+    margin: 1.4rem 0 0;
+    font: 1.3rem/1.6 var(--shz-mono);
+    color: #444;
+  }
+
+  @media (max-width: 767px) {
+    .shz-get {
+      margin-top: 4rem;
+    }
+    .shz-title {
+      font-size: 2.2rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shz .trak-item.playing .shz-eq > span {
+      animation: none;
+    }
+    .shz .shz-dymo-btn {
+      transition: none;
+    }
+  }
+</style>

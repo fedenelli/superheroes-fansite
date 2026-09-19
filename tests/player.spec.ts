@@ -109,9 +109,13 @@ test('durations render from build-time data, with no per-track audio elements', 
 
   const durations = await page.locator('.trak-duration').allTextContents();
   expect(durations).toHaveLength(29);
-  const unresolved = durations.filter((d) => d.trim() === '00:00');
-  // Exactly one file on Spaces is corrupt and could not be probed.
-  expect(unresolved).toHaveLength(1);
+  expect(durations.filter((d) => /^\d{2}:\d{2}$/.test(d.trim()))).toHaveLength(28);
+
+  // Exactly one file on Spaces is corrupt: it is marked, and cannot be played.
+  const dead = page.locator('.trak-item.is-dead');
+  await expect(dead).toHaveCount(1);
+  await expect(dead).toContainText('La bicicleta de Saturno');
+  await expect(dead.locator('.play-pause-button')).toBeDisabled();
 });
 
 test('the player stays hidden until something is queued', async ({ page }) => {

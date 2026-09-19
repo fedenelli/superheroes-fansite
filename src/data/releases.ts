@@ -5,7 +5,7 @@
 export interface Track {
   title: string;
   url: string;
-  /** null when the source file could not be probed; the page measures it client-side instead. */
+  /** null when the source file could not be probed; the tracklist marks the row unplayable. */
   duration: number | null;
 }
 
@@ -29,6 +29,11 @@ export interface Release {
   heroImage: string;
   /** Artwork shown in the footer player while a track from this release plays. */
   cover: string;
+  /**
+   * Highlighter colour for the playing track, sampled from the hero artwork.
+   * Black titles sit on top of it, so it has to stay light enough to read through.
+   */
+  accent: string;
   downloadUrl: string;
   prev: PageLink | null;
   next: PageLink | null;
@@ -47,6 +52,7 @@ export const RELEASES: Release[] = [
     twitterImage: "twalbumverde.png",
     heroImage: "/assets/img/albums/album-verde_main.jpg",
     cover: "/assets/img/albums/cover1.jpg",
+    accent: "#3d9a58",
     downloadUrl: "https://drive.google.com/file/d/0B2ElIMffOhvfd2ZDMEVSWnpHNUU/view?usp=drive_link&resourcekey=0-n697PKqAyom0jUvY5FMLzQ",
     prev: {
       href: "/",
@@ -77,6 +83,7 @@ export const RELEASES: Release[] = [
     twitterImage: "twcomovalareserva.png",
     heroImage: "/assets/img/albums/como-va-la-reserva_main.jpg",
     cover: "/assets/img/albums/cover2.jpg",
+    accent: "#fef60d",
     downloadUrl: "https://drive.google.com/file/d/0B2ElIMffOhvfNGl6aVBUWnliVG8/view?usp=drive_link&resourcekey=0-1eA7A4WoJ3YlE5_4Qy1KFA",
     prev: {
       href: "/album-verde",
@@ -113,6 +120,7 @@ export const RELEASES: Release[] = [
     twitterImage: "twescolares.png",
     heroImage: "/assets/img/albums/escolares_main.jpg",
     cover: "/assets/img/albums/cover3.jpg",
+    accent: "#e9622d",
     downloadUrl: "https://drive.google.com/file/d/0B2ElIMffOhvfcUg4OExPblF4WUk/view?usp=drive_link&resourcekey=0-2BoSGyM3BUHyBox02quR0w",
     prev: {
       href: "/como-va-la-reserva",
@@ -150,6 +158,7 @@ export const RELEASES: Release[] = [
     twitterImage: "twpartidocodificado.png",
     heroImage: "/assets/img/albums/partidocodificado_main.jpg",
     cover: "/assets/img/albums/cover4.jpg",
+    accent: "#2fd35a",
     downloadUrl: "https://drive.google.com/file/d/0B2ElIMffOhvfNkFFaHlFc2FMZ3c/view?usp=drive_link&resourcekey=0-UloAuFRE94JdrGGiKZJh1A",
     prev: {
       href: "/escolares",
@@ -188,6 +197,7 @@ export const RELEASES: Release[] = [
     twitterImage: "twviejasporquerias.png",
     heroImage: "/assets/img/albums/viejas-porquerias_main.jpg",
     cover: "/assets/img/albums/cover7.jpg",
+    accent: "#b3a79a",
     downloadUrl: "https://drive.google.com/file/d/0B2ElIMffOhvfVUJyRXJ6THZLWEk/view?usp=drive_link&resourcekey=0-E3nj9Guf_MWwH0Rv0OO7Ew",
     prev: {
       href: "/el-partido-codificado-del-domingo",
@@ -241,6 +251,7 @@ export const RELEASES: Release[] = [
     twitterImage: "twchiche.jpg",
     heroImage: "/assets/img/albums/chiche_main.jpg",
     cover: "/assets/img/albums/cover8.png",
+    accent: "#28b9a0",
     downloadUrl: "https://drive.google.com/file/d/0B2ElIMffOhvfbzR6RTltZ3VsNjA/view?usp=drive_link&resourcekey=0-glEy3f6tcbhx6D4Mtnaa_Q",
     prev: {
       href: "/viejas-porquerias",
@@ -278,6 +289,7 @@ export const RELEASES: Release[] = [
     twitterImage: "twrockandpop.png",
     heroImage: "/assets/img/albums/rockandpop_main.jpg",
     cover: "/assets/img/albums/cover5.jpg",
+    accent: "#fe1d1d",
     downloadUrl: "https://drive.google.com/file/d/0B2ElIMffOhvfNDJ2YzNzRW9hMW8/view?usp=drive_link&resourcekey=0-c3Lesi9fZiiQe2tlL2f51g",
     prev: {
       href: "/chiche-gelblung-presenta",
@@ -312,6 +324,7 @@ export const RELEASES: Release[] = [
     twitterImage: "twprofile.jpg",
     heroImage: "/assets/img/albums/fmpatricios_main.jpg",
     cover: "/assets/img/albums/cover9.jpg",
+    accent: "#ff4700",
     downloadUrl: "https://drive.google.com/open?id=0B2ElIMffOhvfalBtQi1OTTBidUU",
     prev: {
       href: "/rock-and-pop-en-vivo",
@@ -343,6 +356,7 @@ export const RELEASES: Release[] = [
     twitterImage: "twsalonpueyrredon.png",
     heroImage: "/assets/img/albums/salonpueyrredon_main.jpg",
     cover: "/assets/img/albums/cover6.jpg",
+    accent: "#9a9a9a",
     downloadUrl: "https://drive.google.com/file/d/0B2ElIMffOhvfM1BUOUxNTTNxUnM/view?usp=drive_link&resourcekey=0-gdjOGGLPyITWHWYM2ZB-Gw",
     prev: {
       href: "/fm-patricios-en-vivo",

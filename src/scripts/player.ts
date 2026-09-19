@@ -738,19 +738,6 @@ function bindPage(): void {
     });
   });
 
-  // Durations are baked into the data; only fill in any the build could not probe.
-  list.querySelectorAll<HTMLElement>('.trak-item').forEach((row, index) => {
-    const cell = row.querySelector<HTMLElement>('.trak-duration');
-    if (!cell || queue.tracks[index]?.duration !== null) return;
-    const probe = new Audio();
-    probe.preload = 'metadata';
-    probe.addEventListener('loadedmetadata', () => {
-      // Rows use the zero-padded mm:ss the page was rendered with.
-      cell.textContent = formatTime(probe.duration).padStart(5, '0');
-    });
-    probe.src = queue.tracks[index].url;
-  });
-
   render();
 }
 
