@@ -51,7 +51,9 @@ public/assets/           css, fonts, img, og_img, galleries — served verbatim
 
 **`public/_headers` rules must not overlap.** When several match one request Workers *concatenates* their values, so a `/*` catch-all plus per-directory overrides yields `max-age=3600, …, max-age=31536000` — first value wins and long-lived asset caching silently dies. HTML intentionally has no rule and uses the platform default (`max-age=0` + ETag).
 
-**Class names** like `trak-item`, `jp-playlist`, `albumIcon*` come from the original purchased theme and are load-bearing in `master.css`. `.trak-item.playing` drives the play/pause icon swap on release pages.
+**Class names** like `trak-item`, `jp-playlist`, `albumIcon*` come from the original purchased theme and are load-bearing in `master.css`.
+
+**The release tracklist** lives in `src/components/Tracklist.astro` (the "fotocopia" look: a photocopied bootleg back cover, Lado A / Lado B, label-maker tapes). `player.ts` and the tests still find rows by `.trak-item`, `.play-pause-button` and `.trak-duration`, and map the nth row to the nth track, so the sides must keep dataset order. `.trak-item.active` gets the highlighter and `.playing` animates the bars. Its styles are `is:global`, namespaced `.shz-*`, and scoped under `.shz` so they out-rank and reset the legacy `.trak-item` rules still in `master.css`. The highlighter colour is each release's `accent` in `releases.ts`; black titles sit on it, so keep it light. Pages can add `<head>` tags through Base's `head` slot; release pages use it to load Courier Prime.
 
 **The player UI is self-contained.** `Player.astro` renders three views over the same state — the bottom bar (a mini-player below 768px), the "now playing" sheet (full screen on phones, queue panel on desktop) and a `.shp-pip` card that `player.ts` moves into a Document Picture-in-Picture window. Its styles are `is:global` and namespaced `.shp-*` on purpose: they get copied into the PiP document, and they must not use the legacy `mesh-*` classes that `master.css` still styles. Controls are wired per element via `[data-action]` (not delegated on `<sh-player>`), because the PiP card leaves that subtree. Big artwork uses each release's `heroImage`; the `cover` files are only 30×30.
 
@@ -59,4 +61,4 @@ public/assets/           css, fonts, img, og_img, galleries — served verbatim
 
 ## Known broken content
 
-`viejas-porquerias` track 21, "La bicicleta de Saturno (en vivo)", is 5.2 MB of zero bytes on DigitalOcean — a corrupt upload. It returns 200 but cannot decode, so it has `duration: null` and will not play. Needs re-uploading from the source MP3; nothing in this repo can fix it.
+`viejas-porquerias` track 21, "La bicicleta de Saturno (en vivo)", is 5.2 MB of zero bytes on DigitalOcean — a corrupt upload. It returns 200 but cannot decode, so it has `duration: null` and the tracklist renders it as a disabled "cinta masticada" row. Needs re-uploading from the source MP3; nothing in this repo can fix it.

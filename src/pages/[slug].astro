@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Tracklist from '../components/Tracklist.astro';
 import { RELEASES, type Release } from '../data/releases';
 
 interface Props {
@@ -15,16 +16,6 @@ export function getStaticPaths() {
 
 const { release } = Astro.props as Props;
 
-/** mm:ss — the value the build probed, or a placeholder the client fills in. */
-function formatTime(seconds: number | null): string {
-  if (seconds === null) return '00:00';
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
-}
-
 const links = [release.prev, release.next] as const;
 ---
 
@@ -36,6 +27,12 @@ const links = [release.prev, release.next] as const;
   ogImage={release.ogImage}
   twitterImage={release.twitterImage}
 >
+  <link
+    slot="head"
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap"
+  />
+
   <!-- =============== INICIO BREADCRUMB ================ -->
   <section class="no-mb">
     <div class="row">
@@ -63,51 +60,7 @@ const links = [release.prev, release.next] as const;
         <span class="heading-b3"></span>
       </div>
 
-      <div class="row">
-        <div class="col-sm-8">
-          <div class="jp-playlist" data-release={release.slug} data-album={release.title} data-cover={release.cover} data-art={release.heroImage}>
-            <div class="about-list clearfix">
-              <span class="about-name">TEMA</span>
-              <span class="about-length">DURACIÓN</span>
-            </div>
-
-            {
-              release.tracks.map((track) => (
-                <div class="trak-item">
-                  <div class="play-pause-button">
-                    <div class="center-y-table">
-                      <i class="fa fa-play" />
-                    </div>
-                  </div>
-                  <div class="name-artist">
-                    <div class="center-y-table">
-                      <h2>{track.title}</h2>
-                    </div>
-                  </div>
-                  <time class="trak-duration">{formatTime(track.duration)}</time>
-                </div>
-              ))
-            }
-          </div>
-        </div>
-
-        <div class="col-sm-3 col-sm-offset-1">
-          <div class="sidebarAlbum">
-            <div class="widget">
-              <h3>Descargar en MP3</h3>
-              <section>
-                <ul id="services">
-                  <li>
-                    <a href={release.downloadUrl} target="_blank">
-                      <div><i class="fa fa-cloud-download" aria-hidden="true"></i></div>
-                    </a>
-                  </li>
-                </ul>
-              </section>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Tracklist release={release} />
     </div>
   </section>
   <!-- =============== FIN ALBUM SINGLE ================ -->
